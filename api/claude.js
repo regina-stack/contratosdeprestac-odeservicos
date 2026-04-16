@@ -64,7 +64,7 @@ export default async function handler(req, res) {
           signer: {
             email: emailCliente,
             phone_number: whatsappCliente ? whatsappCliente.replace(/\D/g,'').replace(/^55/,'') : undefined,
-            auths: whatsappCliente ? ['email', 'whatsapp'] : ['email'],
+            auths: ['email'],
             name: nomeCliente,
             documentation: cpfCliente,
             has_documentation: !!cpfCliente,

@@ -122,19 +122,19 @@ select option { background: var(--bg2); color: var(--text); }
   <div class="panel active" id="p1">
     <div class="info-card">Suba o Contrato Social e/ou o Cartão CNPJ. A IA irá ler os documentos e preencher automaticamente nome do sócio, CPF, razão social, CNPJ e endereço. Você poderá revisar e corrigir antes de gerar.</div>
 
-    <div class="upload-zone" id="zone-cs" onclick="document.getElementById('file-cs').click()" style="cursor:pointer;">
-      <input type="file" id="file-cs" accept=".pdf,.jpg,.jpeg,.png,.docx,.dotx,.doc" onchange="handleFile('cs', this)" style="display:none;position:absolute;pointer-events:none;">
+    <div class="upload-zone" id="zone-cs">
       <div class="upload-icon">📄</div>
       <div class="upload-label">Contrato Social</div>
       <div class="upload-sub">PDF ou imagem (JPG, PNG)</div>
+      <input type="file" id="file-cs" accept=".pdf,.jpg,.jpeg,.png,.docx,.doc" onchange="handleFile('cs', this)" style="margin-top:10px;width:100%;color:var(--text2);font-size:13px;background:transparent;border:none;cursor:pointer;">
       <div class="upload-name" id="fname-cs" style="display:none"></div>
     </div>
 
-    <div class="upload-zone" id="zone-cnpj" onclick="document.getElementById('file-cnpj').click()" style="cursor:pointer;">
-      <input type="file" id="file-cnpj" accept=".pdf,.jpg,.jpeg,.png" onchange="handleFile('cnpj', this)" style="display:none;position:absolute;pointer-events:none;">
+    <div class="upload-zone" id="zone-cnpj">
       <div class="upload-icon">🪪</div>
       <div class="upload-label">Cartão CNPJ</div>
       <div class="upload-sub">PDF ou imagem (JPG, PNG)</div>
+      <input type="file" id="file-cnpj" accept=".pdf,.jpg,.jpeg,.png" onchange="handleFile('cnpj', this)" style="margin-top:10px;width:100%;color:var(--text2);font-size:13px;background:transparent;border:none;cursor:pointer;">
       <div class="upload-name" id="fname-cnpj" style="display:none"></div>
     </div>
 

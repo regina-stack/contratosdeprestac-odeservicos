@@ -89,7 +89,7 @@ export default async function handler(req, res) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           signer: {
-            email: 'regina@digitalmaiscontabilidade.com.br',
+            email: 'regina@digitalmaiscontabilidade.com',
             auths: ['email'],
             name: 'Regina Duarte Reis',
             has_documentation: false

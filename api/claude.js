@@ -176,6 +176,53 @@ export default async function handler(req, res) {
       // Regina será notificada automaticamente pela Clicksign
       // quando o cliente (grupo 1) concluir a assinatura.
 
+      // PASSO 8: Registrar contrato no Supabase
+      const SUPA_URL = 'https://rkritsqmaiqyjdonsqqn.supabase.co';
+      const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrcml0c3FtYWlxeWpkb25zcXFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMTY1NzYsImV4cCI6MjA5MTg5MjU3Nn0.uej4YE67KOiL1UZsYaxO2ZD8BOyKL0qBPMrVoFKc-tI';
+      const supaHeaders = {
+        'apikey': SUPA_KEY,
+        'Authorization': 'Bearer ' + SUPA_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      };
+
+      try {
+        const hoje = new Date().toISOString().split('T')[0];
+        const supaResp = await fetch(SUPA_URL + '/rest/v1/contratos', {
+          method: 'POST',
+          headers: supaHeaders,
+          body: JSON.stringify({
+            nome_cliente: nomeCliente,
+            email_cliente: emailCliente,
+            whatsapp_cliente: whatsappCliente,
+            data_envio: hoje,
+            status: 'pendente',
+            document_key: documentKey
+          })
+        });
+        if (supaResp.ok) {
+          const [contrato] = await supaResp.json();
+          // Registra o envio no histórico
+          if (contrato?.id) {
+            await fetch(SUPA_URL + '/rest/v1/contatos', {
+              method: 'POST',
+              headers: supaHeaders,
+              body: JSON.stringify({
+                contrato_id: contrato.id,
+                data_contato: hoje,
+                resultado: 'sem-resposta',
+                canal: 'Sistema',
+                observacao: 'Contrato enviado via Clicksign para assinatura.',
+                feito_por: 'Sistema'
+              })
+            });
+          }
+        }
+      } catch(supaErr) {
+        // Não bloqueia o fluxo se o Supabase falhar
+        console.error('Supabase erro:', supaErr.message);
+      }
+
       return res.status(200).json({
         success: true,
         documentKey,

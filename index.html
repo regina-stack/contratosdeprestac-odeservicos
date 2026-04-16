@@ -79,7 +79,118 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .success-box{display:none;background:rgba(6,214,160,.05);border:1px solid rgba(6,214,160,.2);border-radius:var(--radius);padding:1rem 1.25rem;margin-top:1rem;font-size:13px;color:var(--teal);line-height:1.7}
 .success-box strong{display:block;margin-bottom:4px;font-size:14px;color:#3dffc9}
 @media(max-width:520px){.uploads{grid-template-columns:1fr}.row2,.row3{grid-template-columns:1fr}.steps{flex-wrap:wrap}.stp{flex:1 1 45%}}
+
+/* Modal Clicksign */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:none;align-items:center;justify-content:center;padding:1rem}
+.modal-box{background:#161e16;border:1px solid #2a4a2e;border-radius:16px;padding:2rem;width:100%;max-width:460px;position:relative}
+.modal-title{font-family:'Exo 2',sans-serif;font-size:14px;font-weight:600;color:#39e75f;margin-bottom:1.25rem;display:flex;align-items:center;gap:8px}
+.modal-title::before{content:'';width:3px;height:16px;background:linear-gradient(to bottom,#39e75f,#06d6a0);border-radius:2px}
+.modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:#94a894;font-size:20px;cursor:pointer;line-height:1}
+.modal-close:hover{color:#e8f5ea}
+.cs-status{margin-top:1rem;font-size:13px;min-height:20px;line-height:1.5}
+.btn-cs{width:100%;padding:11px;font-size:14px;font-weight:600;font-family:'Exo 2',sans-serif;border-radius:8px;border:none;background:#39e75f;color:#0a0f0d;cursor:pointer;margin-top:1rem;letter-spacing:.02em;box-shadow:0 0 20px rgba(57,231,95,.2)}
+.btn-cs:hover{background:#5ef07a}
+.btn-cs:disabled{opacity:.5;cursor:not-allowed}
+.btn-clicksign{background:linear-gradient(135deg,#06d6a0,#39e75f);color:#0a0f0d;border:none;padding:9px 18px;font-size:13px;font-weight:600;font-family:'Exo 2',sans-serif;border-radius:8px;cursor:pointer;box-shadow:0 0 16px rgba(6,214,160,.25);letter-spacing:.02em}
+.btn-clicksign:hover{box-shadow:0 0 24px rgba(6,214,160,.4)}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
+// ── CLICKSIGN ──────────────────────────────────────────────────────────────
+function abrirModalClicksign() {
+  const d = getData();
+  if (!d.razao || !d.socio) { alert('Preencha os dados do cliente antes de enviar.'); goStep(2); return; }
+  document.getElementById('cs-nome').value = d.socio;
+  document.getElementById('cs-cpf').value = d.cpf || '';
+  document.getElementById('cs-empresa').value = d.razao;
+  document.getElementById('cs-email').value = '';
+  document.getElementById('cs-whats').value = '';
+  document.getElementById('cs-status').textContent = '';
+  document.getElementById('btn-cs-enviar').disabled = false;
+  document.getElementById('btn-cs-enviar').textContent = '✦ Enviar para assinatura';
+  document.getElementById('modal-clicksign').style.display = 'flex';
+}
+function fecharModalClicksign() { document.getElementById('modal-clicksign').style.display = 'none'; }
+
+async function enviarClicksign() {
+  const nome  = document.getElementById('cs-nome').value.trim();
+  const cpf   = document.getElementById('cs-cpf').value.trim();
+  const email = document.getElementById('cs-email').value.trim();
+  const whats = document.getElementById('cs-whats').value.trim();
+  if (!nome || !email) { alert('Preencha nome e e-mail do cliente.'); return; }
+  if (!cpf)  { alert('Informe o CPF do cliente.'); return; }
+  const btn    = document.getElementById('btn-cs-enviar');
+  const status = document.getElementById('cs-status');
+  btn.disabled = true;
+  const setStatus = (msg, cor) => { status.textContent = msg; status.style.color = cor || '#39e75f'; };
+  try {
+    setStatus('⏳ Gerando contrato em PDF...');
+    const d = getData();
+    const htmlStr = buildContractHTML(d);
+    const pdfBase64 = await gerarPDFBase64(htmlStr);
+    setStatus('⏳ Enviando para Clicksign...');
+    const nomeDoc = 'Contrato_' + (d.razao || 'cliente').replace(/[^a-zA-Z0-9]/g, '_');
+    const fone = whats.replace(/\D/g, '');
+    const resp = await fetch('/api/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'clicksign',
+        pdfBase64,
+        nomeCliente: nome,
+        cpfCliente: cpf.replace(/\D/g,''),
+        nascCliente: nasc,
+        emailCliente: email,
+        whatsappCliente: fone ? '+55' + fone : '',
+        nomeDocumento: nomeDoc
+      })
+    });
+    const data = await resp.json();
+    if (!resp.ok || data.error) throw new Error(data.error || 'Erro desconhecido');
+    setStatus('✅ ' + data.message, '#06d6a0');
+    btn.textContent = '✓ Enviado com sucesso!';
+  } catch(e) {
+    setStatus('❌ Erro: ' + e.message, '#f87171');
+    btn.disabled = false;
+    btn.textContent = '✦ Tentar novamente';
+  }
+}
+
+async function gerarPDFBase64(htmlStr) {
+  return new Promise((resolve, reject) => {
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:794px;height:1123px;border:none;visibility:hidden';
+    document.body.appendChild(iframe);
+    iframe.contentDocument.open();
+    iframe.contentDocument.write(htmlStr);
+    iframe.contentDocument.close();
+    setTimeout(async () => {
+      try {
+        const { jsPDF } = window.jspdf;
+        const body = iframe.contentDocument.body;
+        const canvas = await html2canvas(body, { scale: 1.5, useCORS: true, logging: false, width: 794, windowWidth: 794 });
+        document.body.removeChild(iframe);
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+        const pW = pdf.internal.pageSize.getWidth();
+        const pH = pdf.internal.pageSize.getHeight();
+        const imgH = (canvas.height * pW) / canvas.width;
+        const imgData = canvas.toDataURL('image/jpeg', 0.9);
+        let remaining = imgH, y = 0, page = 0;
+        while (remaining > 0) {
+          if (page > 0) pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', 0, -y, pW, imgH);
+          y += pH; remaining -= pH; page++;
+        }
+        resolve(pdf.output('datauristring').split(',')[1]);
+      } catch(e) {
+        if (document.body.contains(iframe)) document.body.removeChild(iframe);
+        reject(e);
+      }
+    }, 1800);
+  });
+}
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -252,7 +363,8 @@ Planejamento tributário anual</textarea></td>
       <div class="ai-bar" id="bar4"><div class="spin"></div><span>Gerando contrato...</span></div>
       <div class="actions">
         <button class="btn" onclick="goStep(3)">← Voltar</button>
-        <button class="btn btn-primary" id="btn-gerar" onclick="gerarContrato()">⬇ Baixar Contrato</button>
+        <button class="btn-clicksign" onclick="abrirModalClicksign()">✦ Enviar para assinatura</button>
+        <button class="btn btn-primary" id="btn-gerar" onclick="gerarContrato()">⬇ Baixar HTML</button>
       </div>
     </div>
     <div class="success-box" id="success-box">
@@ -260,6 +372,41 @@ Planejamento tributário anual</textarea></td>
       Abra o arquivo <strong>.html</strong> no Chrome ou Edge → <strong>Ctrl+P</strong> → <strong>"Salvar como PDF"</strong>.
     </div>
   </div>
+
+<!-- Modal Clicksign -->
+<div class="modal-overlay" id="modal-clicksign">
+  <div class="modal-box">
+    <button class="modal-close" onclick="fecharModalClicksign()">✕</button>
+    <div class="modal-title">Enviar para assinatura via Clicksign</div>
+
+    <p class="sec" style="margin-top:0">Dados do signatário (cliente)</p>
+    <div class="fg">
+      <label>Nome completo</label>
+      <input type="text" id="cs-nome" placeholder="Nome completo do sócio/representante">
+    </div>
+    <div class="fg">
+      <label>CPF</label>
+      <input type="text" id="cs-cpf" placeholder="000.000.000-00">
+    </div>
+    <div class="fg">
+      <label>E-mail do cliente</label>
+      <input type="email" id="cs-email" placeholder="email@cliente.com.br">
+    </div>
+    <div class="fg">
+      <label>WhatsApp (com DDD, sem +55)</label>
+      <input type="text" id="cs-whats" placeholder="31 99999-9999">
+    </div>
+    <div style="display:none"><input type="text" id="cs-empresa"><input type="hidden" id="cs-nasc"></div>
+
+    <p style="font-size:12px;color:#94a894;line-height:1.6;margin-top:.75rem;padding:10px 12px;background:rgba(57,231,95,0.05);border-radius:8px;border:1px solid rgba(57,231,95,0.1)">
+      O cliente receberá o contrato por <strong style="color:#39e75f">e-mail e WhatsApp</strong> para assinar digitalmente.
+      Regina Duarte Reis também será notificada para contrassinar.
+    </p>
+    <div class="cs-status" id="cs-status"></div>
+    <button class="btn-cs" id="btn-cs-enviar" onclick="enviarClicksign()">✦ Enviar para assinatura</button>
+  </div>
+</div>
+
 </div>
 
 <script>

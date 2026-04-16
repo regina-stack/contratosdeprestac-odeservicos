@@ -125,17 +125,19 @@ select option { background: var(--bg2); color: var(--text); }
     <div class="upload-zone" id="zone-cs">
       <div class="upload-icon">📄</div>
       <div class="upload-label">Contrato Social</div>
-      <div class="upload-sub">PDF ou imagem (JPG, PNG)</div>
-      <input type="file" id="file-cs" accept=".pdf,.jpg,.jpeg,.png,.docx,.doc" onchange="handleFile('cs', this)" style="margin-top:10px;width:100%;color:var(--text2);font-size:13px;background:transparent;border:none;cursor:pointer;">
-      <div class="upload-name" id="fname-cs" style="display:none"></div>
+      <div class="upload-sub">Clique no botão abaixo para selecionar o PDF</div>
+      <label for="file-cs" style="display:inline-block;margin-top:12px;padding:8px 18px;background:var(--green);color:#0a1a0c;font-weight:700;font-size:13px;border-radius:8px;cursor:pointer;">Selecionar arquivo</label>
+      <input type="file" id="file-cs" accept=".pdf,.jpg,.jpeg,.png" onchange="handleFile('cs', this)" style="display:none;">
+      <div class="upload-name" id="fname-cs" style="display:none;margin-top:8px;"></div>
     </div>
 
     <div class="upload-zone" id="zone-cnpj">
       <div class="upload-icon">🪪</div>
       <div class="upload-label">Cartão CNPJ</div>
-      <div class="upload-sub">PDF ou imagem (JPG, PNG)</div>
-      <input type="file" id="file-cnpj" accept=".pdf,.jpg,.jpeg,.png" onchange="handleFile('cnpj', this)" style="margin-top:10px;width:100%;color:var(--text2);font-size:13px;background:transparent;border:none;cursor:pointer;">
-      <div class="upload-name" id="fname-cnpj" style="display:none"></div>
+      <div class="upload-sub">Clique no botão abaixo para selecionar o PDF</div>
+      <label for="file-cnpj" style="display:inline-block;margin-top:12px;padding:8px 18px;background:var(--green);color:#0a1a0c;font-weight:700;font-size:13px;border-radius:8px;cursor:pointer;">Selecionar arquivo</label>
+      <input type="file" id="file-cnpj" accept=".pdf,.jpg,.jpeg,.png" onchange="handleFile('cnpj', this)" style="display:none;">
+      <div class="upload-name" id="fname-cnpj" style="display:none;margin-top:8px;"></div>
     </div>
 
     <div id="ai-status-1" style="display:none" class="ai-status">

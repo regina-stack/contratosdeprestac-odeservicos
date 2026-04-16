@@ -105,8 +105,9 @@ select option { background: var(--bg2); color: var(--text); }
         <tr style="background:var(--bg3);">
           <th style="padding:8px 10px;text-align:left;border:1px solid var(--border);width:13%;color:var(--text2);">Plano</th>
           <th style="padding:8px 10px;text-align:left;border:1px solid var(--border);width:27%;color:var(--text2);">Faturamento</th>
-          <th style="padding:8px 10px;text-align:center;border:1px solid var(--border);width:20%;color:var(--text2);">Simples Nacional</th>
-          <th style="padding:8px 10px;text-align:center;border:1px solid var(--border);width:20%;color:var(--text2);">Lucro Presumido</th>
+          <th style="padding:8px 10px;text-align:center;border:1px solid var(--border);width:18%;color:var(--text2);">Simples Nacional</th>
+          <th style="padding:8px 10px;text-align:center;border:1px solid var(--border);width:18%;color:var(--text2);">Lucro Presumido</th>
+          <th style="padding:8px 10px;text-align:center;border:1px solid var(--border);width:6%;color:var(--text2);">Del.</th>
         </tr>
       </thead>
       <tbody id="config-tbody"></tbody>
@@ -199,29 +200,8 @@ select option { background: var(--bg2); color: var(--text); }
 
   <!-- STEP 3 -->
   <div class="panel" id="p3">
-    <p class="section-title">Plano contratado</p>
-    <div class="field-group">
-      <label>Plano</label>
-      <select id="f-plano" onchange="updateValor()">
-        <option value="FLEXÍVEL">FLEXÍVEL — até R$ 15 mil/mês</option>
-        <option value="BASIC">BASIC — até R$ 50 mil/mês</option>
-        <option value="PLUS">PLUS — R$ 50k a 100k/mês</option>
-        <option value="PREMIUM">PREMIUM — R$ 100k a 300k/mês</option>
-      </select>
-    </div>
-    <div class="row2">
-      <div class="field-group">
-        <label>Regime tributário</label>
-        <select id="f-regime" onchange="updateValor()">
-          <option value="Simples Nacional">Simples Nacional</option>
-          <option value="Lucro Presumido">Lucro Presumido</option>
-        </select>
-      </div>
-      <div class="field-group">
-        <label>Valor mensal (automático)</label>
-        <input type="text" id="f-valor" readonly style="background:#f5f4f0;color:#4a4a4a;">
-      </div>
-    </div>
+    <div class="info-card">Os planos abaixo são os configurados em <strong>⚙ Configurar planos</strong>. Todos aparecerão no contrato automaticamente.</div>
+    <div id="planos-preview" style="margin-bottom:1.25rem;"></div>
 
     <p class="section-title">Datas</p>
     <div class="row2">
@@ -289,8 +269,10 @@ function getPlanValue(nome, regime) {
 function renderConfigTable() {
   const tbody = document.getElementById('config-tbody');
   tbody.innerHTML = plans.map((p, i) => `
-    <tr>
-      <td style="padding:6px 10px;border:1px solid var(--border);font-weight:600;color:var(--green);">${p.nome}</td>
+    <tr id="cfg-row-${i}">
+      <td style="padding:6px 10px;border:1px solid var(--border);font-weight:600;color:var(--green);white-space:nowrap;">
+        ${p.nome}
+      </td>
       <td style="padding:6px 10px;border:1px solid var(--border);">
         <input type="text" value="${p.fat}" id="cfg-fat-${i}" style="width:100%;padding:5px 8px;font-size:13px;background:var(--bg);border:1px solid var(--border2);color:var(--text);border-radius:6px;">
       </td>
@@ -300,7 +282,17 @@ function renderConfigTable() {
       <td style="padding:6px 10px;border:1px solid var(--border);">
         <input type="text" value="${p.lp}" id="cfg-lp-${i}" style="width:100%;padding:5px 8px;font-size:13px;text-align:center;background:var(--bg);border:1px solid var(--border2);color:var(--text);border-radius:6px;">
       </td>
+      <td style="padding:6px 8px;border:1px solid var(--border);text-align:center;">
+        <button onclick="deletePlan(${i})" style="background:transparent;border:none;color:#ff6b6b;cursor:pointer;font-size:16px;padding:2px 6px;" title="Excluir plano">🗑</button>
+      </td>
     </tr>`).join('');
+}
+
+function deletePlan(i) {
+  if (plans.length <= 1) { alert('É necessário ter ao menos um plano.'); return; }
+  if (!confirm('Excluir o plano ' + plans[i].nome + '?')) return;
+  plans.splice(i, 1);
+  renderConfigTable();
 }
 
 function toggleConfig() {
@@ -316,8 +308,7 @@ function savePlans() {
     p.sn  = document.getElementById(`cfg-sn-${i}`).value;
     p.lp  = document.getElementById(`cfg-lp-${i}`).value;
   });
-  updateValor();
-  updatePlanSelect();
+  renderPlanosPreview();
   const msg = document.getElementById('config-saved');
   msg.style.display = 'inline';
   setTimeout(() => msg.style.display = 'none', 2500);
@@ -326,26 +317,35 @@ function savePlans() {
 function resetPlans() {
   plans = JSON.parse(JSON.stringify(defaultPlans));
   renderConfigTable();
-  updateValor();
-  updatePlanSelect();
+  renderPlanosPreview();
 }
 
 function updatePlanSelect() {
-  const sel = document.getElementById('f-plano');
-  const cur = sel.value;
-  sel.innerHTML = plans.map(p => `<option value="${p.nome}">${p.nome} — ${p.fat}</option>`).join('');
-  if (plans.find(x => x.nome === cur)) sel.value = cur;
-  updateValor();
+  renderPlanosPreview();
 }
 
-updateValor();
+function renderPlanosPreview() {
+  const el = document.getElementById('planos-preview');
+  if (!el) return;
+  el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:12px;">
+    <tr style="background:var(--bg3);">
+      <th style="padding:6px 10px;border:1px solid var(--border);color:var(--text2);text-align:left;">Plano</th>
+      <th style="padding:6px 10px;border:1px solid var(--border);color:var(--text2);text-align:left;">Faturamento</th>
+      <th style="padding:6px 10px;border:1px solid var(--border);color:var(--text2);text-align:center;">Simples Nacional</th>
+      <th style="padding:6px 10px;border:1px solid var(--border);color:var(--text2);text-align:center;">Lucro Presumido</th>
+    </tr>
+    ${plans.map(p => `<tr>
+      <td style="padding:6px 10px;border:1px solid var(--border);color:var(--green);font-weight:600;">${p.nome}</td>
+      <td style="padding:6px 10px;border:1px solid var(--border);color:var(--text2);">${p.fat}</td>
+      <td style="padding:6px 10px;border:1px solid var(--border);color:var(--text);text-align:center;">${p.sn}</td>
+      <td style="padding:6px 10px;border:1px solid var(--border);color:var(--text);text-align:center;">${p.lp}</td>
+    </tr>`).join('')}
+  </table>`;
+}
+
 updatePlanSelect();
 
-function updateValor() {
-  const p = document.getElementById('f-plano').value;
-  const r = document.getElementById('f-regime').value;
-  document.getElementById('f-valor').value = getPlanValue(p, r);
-}
+function updateValor() {}
 
 function handleFile(type, input) {
   const file = input.files[0];
@@ -402,7 +402,7 @@ async function extractWithAI() {
       }
     }
 
-    const res = await fetch('/api/claude', {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages: [{ role: 'user', content: contentParts }] })
@@ -450,9 +450,6 @@ function getFormData() {
     razao: document.getElementById('f-razao').value || '___',
     cnpj_val: document.getElementById('f-cnpj').value || '___',
     end: document.getElementById('f-end').value || '___',
-    plano: document.getElementById('f-plano').value,
-    regime: document.getElementById('f-regime').value,
-    valor: document.getElementById('f-valor').value,
     inicio: document.getElementById('f-inicio').value,
     venc: document.getElementById('f-venc').value,
     local: document.getElementById('f-local').value || 'Santa Luzia'
@@ -464,7 +461,7 @@ function buildPreview() {
   document.getElementById('resumo-campos').innerHTML = `<strong>Resumo dos dados a serem inseridos:</strong>
 Cliente: <b>${d.razao}</b> | CNPJ: <b>${d.cnpj_val}</b><br>
 Sócio: <b>${d.socio}</b> | CPF: <b>${d.cpf}</b><br>
-Plano: <b>${d.plano}</b> (${d.regime}) — <b>${d.valor}</b>/mês<br>
+Planos: <b>${plans.map(p=>p.nome).join(', ')}</b><br>
 Início: <b>${formatDateShort(d.inicio)}</b> | Primeiro vencimento: <b>${formatDateShort(d.venc)}</b>`;
 
   document.getElementById('preview-box').textContent =
@@ -474,7 +471,7 @@ da empresa ${d.razao}
 CNPJ: ${d.cnpj_val}
 Endereço: ${d.end}
 
-▸ Plano: ${d.plano} | Regime: ${d.regime} | Valor: ${d.valor}/mês
+▸ Planos no contrato: ${plans.map(p=>p.nome).join(', ')}
 ▸ Início do contrato: ${formatDateShort(d.inicio)}
 ▸ Primeiro vencimento: ${formatDateShort(d.venc)}
 ▸ Assinatura: ${d.local}, ${formatDateBR(d.inicio)}`;
@@ -489,7 +486,7 @@ async function generateContract() {
   const d = getFormData();
 
   try {
-    await fetch('/api/claude', {
+    await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 30, messages: [{ role: 'user', content: `OK para: ${d.razao}` }] })
@@ -599,7 +596,7 @@ ${plans.map((p, i) => {
 }).join('')}
 </table>
 
-<div class="plano-box"><strong>Plano contratado: ${d.plano}</strong> — Regime: <strong>${d.regime}</strong> — Valor mensal: <strong>${d.valor}</strong></div>
+<div class="plano-box">O valor mensal será definido conforme o faturamento da CONTRATANTE, de acordo com a tabela acima.</div>
 
 <p><strong>PARÁGRAFO PRIMEIRO.</strong> Os honorários serão reajustados no mês de janeiro de cada ano ou quando houver aumento dos serviços contratados, tendo como base a variação do Salário-Mínimo vigente no País.</p>
 

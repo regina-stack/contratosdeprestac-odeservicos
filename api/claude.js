@@ -63,7 +63,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           signer: {
             email: emailCliente,
-            phone_number: whatsappCliente ? whatsappCliente.replace(/\D/g,'').replace(/^55/,'') : undefined,
+            phone_number: whatsappCliente ? whatsappCliente.replace(/\D/g,'') : undefined,
             auths: ['email'],
             name: nomeCliente,
             documentation: cpfCliente,
@@ -159,13 +159,16 @@ export default async function handler(req, res) {
 
       // PASSO 7: Notificar cliente por WhatsApp (se tiver número)
       if (whatsappCliente) {
-        await fetch(`${BASE}/notifications?access_token=${token}`, {
+        const foneWA = whatsappCliente.replace(/\D/g, '');
+        await fetch(`${BASE}/whatsapp_documents?access_token=${token}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            request_signature_key: requestSignatureKeyCliente,
-            message: `Olá ${nomeCliente}, seu contrato com a Digital+ Contabilidade está pronto para assinatura.`,
-            channel: 'whatsapp'
+            whatsapp_document: {
+              request_signature_key: requestSignatureKeyCliente,
+              phone_number: foneWA,
+              message: `Olá ${nomeCliente}, seu contrato com a Digital+ Contabilidade está pronto para assinatura. Por favor, clique no link abaixo para assinar digitalmente.`
+            }
           })
         });
       }

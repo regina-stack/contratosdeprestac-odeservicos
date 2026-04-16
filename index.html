@@ -7,63 +7,81 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700&family=Inter:wght@300;400;500&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --green:#39e75f;--teal:#06d6a0;--dark:#0a0f0d;--dark2:#111711;--dark3:#161e16;--dark4:#1c271c;
-  --border:#1f3320;--border2:#2a4a2e;--text:#e8f5ea;--text2:#94a894;--radius:12px;
-}
-body{font-family:'Inter',sans-serif;background:var(--dark);color:var(--text);min-height:100vh;padding:0}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 50% -10%,rgba(57,231,95,0.07) 0%,transparent 70%),radial-gradient(ellipse 40% 40% at 100% 50%,rgba(6,214,160,0.04) 0%,transparent 60%);pointer-events:none;z-index:0}
-.app{max-width:680px;margin:0 auto;padding:2rem 1rem 4rem;position:relative;z-index:1}
-.header{text-align:center;margin-bottom:2.5rem;padding-bottom:2rem;border-bottom:1px solid var(--border)}
-.logo-img{height:48px;margin-bottom:1rem;filter:drop-shadow(0 0 16px rgba(57,231,95,0.3))}
-.header-sub{font-size:13px;color:var(--text2);letter-spacing:0.05em;text-transform:uppercase}
-.steps{display:flex;gap:4px;margin-bottom:2rem}
-.stp{flex:1;padding:10px 6px;border-radius:8px;border:1px solid var(--border);font-size:11px;font-weight:500;text-align:center;color:var(--text2);background:var(--dark3);transition:all 0.2s;font-family:'Exo 2',sans-serif}
-.stp-num{display:block;font-weight:700;font-size:13px;margin-bottom:1px}
-.stp.active{border-color:var(--green);color:var(--green);background:rgba(57,231,95,0.06)}
+:root{--green:#39e75f;--teal:#06d6a0;--dark:#0a0f0d;--dark3:#161e16;--dark4:#1c271c;--border:#1f3320;--border2:#2a4a2e;--text:#e8f5ea;--text2:#94a894;--radius:12px}
+body{font-family:'Inter',sans-serif;background:var(--dark);color:var(--text);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 50% -10%,rgba(57,231,95,0.07) 0%,transparent 70%);pointer-events:none;z-index:0}
+.app{max-width:720px;margin:0 auto;padding:2rem 1rem 4rem;position:relative;z-index:1}
+.header{text-align:center;margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}
+.logo-img{height:44px;margin-bottom:.75rem;filter:drop-shadow(0 0 16px rgba(57,231,95,0.3))}
+.header-sub{font-size:12px;color:var(--text2);letter-spacing:.06em;text-transform:uppercase}
+.steps{display:flex;gap:4px;margin-bottom:1.75rem}
+.stp{flex:1;padding:9px 6px;border-radius:8px;border:1px solid var(--border);font-size:11px;font-weight:500;text-align:center;color:var(--text2);background:var(--dark3);transition:all .2s;font-family:'Exo 2',sans-serif}
+.stp-num{display:block;font-weight:700;font-size:12px;margin-bottom:1px}
+.stp.active{border-color:var(--green);color:var(--green);background:rgba(57,231,95,.06)}
 .stp.active .stp-num{color:var(--green)}
-.stp.done{border-color:var(--teal);color:var(--teal);background:rgba(6,214,160,0.05)}
+.stp.done{border-color:var(--teal);color:var(--teal);background:rgba(6,214,160,.05)}
 .stp.done .stp-num{color:var(--teal)}
 .card{background:var(--dark3);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1rem}
-.card-title{font-family:'Exo 2',sans-serif;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--green);margin-bottom:1.25rem;padding-bottom:0.75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.card-title{font-family:'Exo 2',sans-serif;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--green);margin-bottom:1.25rem;padding-bottom:.75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
 .card-title::before{content:'';width:3px;height:14px;background:linear-gradient(to bottom,var(--green),var(--teal));border-radius:2px;flex-shrink:0}
 .panel{display:none}.panel.show{display:block}
 .uploads{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem}
-.uz{border:1px dashed var(--border2);border-radius:var(--radius);padding:1.5rem 1rem;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--dark4);position:relative;min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.uz:hover{border-color:var(--green);background:rgba(57,231,95,0.04)}
-.uz.ok{border-color:var(--teal);background:rgba(6,214,160,0.05);border-style:solid}
+.uz{border:1px dashed var(--border2);border-radius:var(--radius);padding:1.5rem 1rem;text-align:center;cursor:pointer;transition:all .2s;background:var(--dark4);position:relative;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.uz:hover{border-color:var(--green);background:rgba(57,231,95,.04)}
+.uz.ok{border-color:var(--teal);background:rgba(6,214,160,.05);border-style:solid}
 .uz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.uz-ico{font-size:24px;margin-bottom:8px;pointer-events:none}
+.uz-ico{font-size:22px;margin-bottom:7px;pointer-events:none}
 .uz-title{font-size:13px;font-weight:600;color:var(--text);pointer-events:none;font-family:'Exo 2',sans-serif}
 .uz-sub{font-size:11px;color:var(--text2);margin-top:3px;pointer-events:none}
-.uz-file{font-size:11px;color:var(--teal);font-weight:600;margin-top:6px;pointer-events:none;display:none}
+.uz-file{font-size:11px;color:var(--teal);font-weight:600;margin-top:5px;pointer-events:none;display:none}
 .uz.ok .uz-file{display:block}.uz.ok .uz-sub{display:none}
-.info-box{background:rgba(57,231,95,0.05);border:1px solid rgba(57,231,95,0.15);border-radius:8px;padding:10px 14px;font-size:13px;color:#9de8a8;margin-bottom:1.25rem;line-height:1.6}
-.ai-bar{display:none;align-items:center;gap:10px;padding:10px 14px;background:rgba(57,231,95,0.05);border:1px solid rgba(57,231,95,0.15);border-radius:8px;margin:0.75rem 0;font-size:13px;color:var(--green)}
+.info-box{background:rgba(57,231,95,.05);border:1px solid rgba(57,231,95,.15);border-radius:8px;padding:10px 14px;font-size:13px;color:#9de8a8;margin-bottom:1.25rem;line-height:1.6}
+.ai-bar{display:none;align-items:center;gap:10px;padding:10px 14px;background:rgba(57,231,95,.05);border:1px solid rgba(57,231,95,.15);border-radius:8px;margin:.75rem 0;font-size:13px;color:var(--green)}
 .ai-bar.show{display:flex}
-.spin{width:15px;height:15px;border:2px solid rgba(57,231,95,0.2);border-top-color:var(--green);border-radius:50%;animation:spin 0.7s linear infinite;flex-shrink:0}
+.spin{width:15px;height:15px;border:2px solid rgba(57,231,95,.2);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
 @keyframes spin{to{transform:rotate(360deg)}}
-.sec{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text2);margin:1.25rem 0 0.75rem;padding-bottom:6px;border-bottom:1px solid var(--border)}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
-.fg{margin-bottom:0.75rem}
+.sec{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--text2);margin:1.25rem 0 .75rem;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem}
+.fg{margin-bottom:.75rem}
 .fg label{display:block;font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px}
-.fg input,.fg select,.fg textarea{width:100%;padding:9px 12px;font-size:14px;font-family:'Inter',sans-serif;border:1px solid var(--border2);border-radius:8px;background:var(--dark4);color:var(--text);transition:border-color 0.15s;outline:none}
+.fg input,.fg select,.fg textarea{width:100%;padding:9px 12px;font-size:14px;font-family:'Inter',sans-serif;border:1px solid var(--border2);border-radius:8px;background:var(--dark4);color:var(--text);transition:border-color .15s;outline:none}
 .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--green)}
 .fg select option{background:var(--dark3)}
-.fg textarea{min-height:70px;resize:vertical;line-height:1.5}
-.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;background:rgba(6,214,160,0.1);color:var(--teal);margin-left:6px;vertical-align:middle}
+.fg textarea{min-height:68px;resize:vertical;line-height:1.5}
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;background:rgba(6,214,160,.1);color:var(--teal);margin-left:6px;vertical-align:middle}
+/* Planos table inside form */
+.planos-config{margin-bottom:.75rem}
+.planos-config table{width:100%;border-collapse:collapse;font-size:12px}
+.planos-config th{padding:8px 10px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text2);border-bottom:1px solid var(--border2)}
+.planos-config td{padding:7px 10px;border-bottom:1px solid var(--border)}
+.planos-config tr:last-child td{border-bottom:none}
+.planos-config .plan-name{font-weight:600;font-family:'Exo 2',sans-serif;color:var(--green);font-size:13px}
+.planos-config input[type=text]{padding:5px 8px;font-size:12px;border:1px solid var(--border2);border-radius:6px;background:var(--dark4);color:var(--text);width:100%;outline:none}
+.planos-config input[type=text]:focus{border-color:var(--green)}
+/* Toggle switch */
+.toggle-row{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--dark4);border:1px solid var(--border2);border-radius:8px;margin-bottom:.75rem}
+.toggle-row label{font-size:13px;color:var(--text);flex:1;cursor:pointer}
+.toggle-row small{font-size:11px;color:var(--text2);display:block;margin-top:2px}
+.toggle{position:relative;width:42px;height:24px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--border2);border-radius:24px;cursor:pointer;transition:.2s}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:var(--text2);border-radius:50%;transition:.2s}
+.toggle input:checked+.toggle-slider{background:var(--green)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(18px);background:#0a0f0d}
+/* Actions */
 .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--border)}
-.btn{padding:9px 18px;font-size:13px;font-weight:500;font-family:'Inter',sans-serif;border-radius:8px;border:1px solid var(--border2);background:var(--dark4);color:var(--text2);cursor:pointer;transition:all 0.15s}
+.btn{padding:9px 18px;font-size:13px;font-weight:500;font-family:'Inter',sans-serif;border-radius:8px;border:1px solid var(--border2);background:var(--dark4);color:var(--text2);cursor:pointer;transition:all .15s}
 .btn:hover{border-color:var(--text2);color:var(--text)}
-.btn-primary{background:var(--green);color:#0a0f0d;border-color:var(--green);font-weight:600;font-family:'Exo 2',sans-serif;letter-spacing:0.02em;box-shadow:0 0 20px rgba(57,231,95,0.2)}
-.btn-primary:hover{background:#5ef07a;box-shadow:0 0 28px rgba(57,231,95,0.35)}
-.btn:disabled{opacity:0.4;cursor:not-allowed;box-shadow:none}
+.btn-primary{background:var(--green);color:#0a0f0d;border-color:var(--green);font-weight:600;font-family:'Exo 2',sans-serif;letter-spacing:.02em;box-shadow:0 0 20px rgba(57,231,95,.2)}
+.btn-primary:hover{background:#5ef07a;box-shadow:0 0 28px rgba(57,231,95,.35)}
+.btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
 .sum-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
 .sum-row:last-child{border-bottom:none}
-.sum-lbl{color:var(--text2)}.sum-val{font-weight:500;color:var(--text);text-align:right;max-width:60%}
-.success-box{display:none;background:rgba(6,214,160,0.05);border:1px solid rgba(6,214,160,0.2);border-radius:var(--radius);padding:1rem 1.25rem;margin-top:1rem;font-size:13px;color:var(--teal);line-height:1.7}
+.sum-lbl{color:var(--text2)}.sum-val{font-weight:500;color:var(--text);text-align:right;max-width:65%}
+.success-box{display:none;background:rgba(6,214,160,.05);border:1px solid rgba(6,214,160,.2);border-radius:var(--radius);padding:1rem 1.25rem;margin-top:1rem;font-size:13px;color:var(--teal);line-height:1.7}
 .success-box strong{display:block;margin-bottom:4px;font-size:14px;color:#3dffc9}
-@media(max-width:480px){.uploads{grid-template-columns:1fr}.row2{grid-template-columns:1fr}.steps{flex-wrap:wrap}.stp{flex:1 1 45%}}
+@media(max-width:520px){.uploads{grid-template-columns:1fr}.row2,.row3{grid-template-columns:1fr}.steps{flex-wrap:wrap}.stp{flex:1 1 45%}}
 </style>
 </head>
 <body>
@@ -75,10 +93,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <div class="steps">
     <div class="stp active" id="stp1"><span class="stp-num">01</span>Documentos</div>
     <div class="stp" id="stp2"><span class="stp-num">02</span>Dados</div>
-    <div class="stp" id="stp3"><span class="stp-num">03</span>Plano</div>
+    <div class="stp" id="stp3"><span class="stp-num">03</span>Planos</div>
     <div class="stp" id="stp4"><span class="stp-num">04</span>Gerar</div>
   </div>
 
+  <!-- STEP 1: Upload -->
   <div class="panel show" id="p1">
     <div class="card">
       <div class="card-title">Upload dos documentos</div>
@@ -95,6 +114,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     </div>
   </div>
 
+  <!-- STEP 2: Client data -->
   <div class="panel" id="p2">
     <div class="card">
       <div class="card-title">Dados do cliente</div>
@@ -117,22 +137,61 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     </div>
   </div>
 
+  <!-- STEP 3: Planos + config -->
   <div class="panel" id="p3">
     <div class="card">
-      <div class="card-title">Plano e valores</div>
-      <p class="sec">Plano contratado</p>
-      <div class="row2">
-        <div class="fg"><label>Plano</label><select id="f-plano"><option value="">Selecione...</option><option value="FLEXÍVEL">FLEXÍVEL</option><option value="BASIC">BASIC</option><option value="PLUS">PLUS</option><option value="PREMIUM">PREMIUM</option></select></div>
-        <div class="fg"><label>Regime tributário</label><select id="f-regime"><option value="">Selecione...</option><option value="Simples Nacional">Simples Nacional</option><option value="Lucro Presumido">Lucro Presumido</option><option value="Lucro Real">Lucro Real</option><option value="MEI">MEI</option></select></div>
+      <div class="card-title">Configuração dos planos e honorários</div>
+
+      <div class="toggle-row">
+        <label for="tog-flex">
+          Incluir cláusula de flexibilização no contrato
+          <small>Quando ativado, aparece a tabela completa de planos com troca automática por faturamento</small>
+        </label>
+        <label class="toggle"><input type="checkbox" id="tog-flex" checked onchange="toggleFlex()"><span class="toggle-slider"></span></label>
       </div>
-      <div class="row2">
-        <div class="fg"><label>Valor mensal (R$)</label><input type="text" id="f-valor" placeholder="Ex: R$ 350,00"></div>
-        <div class="fg"><label>Dia de vencimento</label><input type="text" id="f-venc" placeholder="Ex: 10"></div>
+
+      <div id="bloco-planos">
+        <p class="sec">Tabela de planos — edite faturamento e honorários</p>
+        <div class="planos-config">
+          <table>
+            <thead><tr><th>Plano</th><th>Faturamento mensal</th><th>Simples Nacional</th><th>Lucro Presumido</th></tr></thead>
+            <tbody>
+              <tr><td><span class="plan-name">FLEXÍVEL</span></td><td><input type="text" id="fat-0" value="Até R$ 15 mil/mês"></td><td><input type="text" id="sn-0" value="R$ 297,00"></td><td><input type="text" id="lp-0" value="R$ 697,00"></td></tr>
+              <tr><td><span class="plan-name">BASIC</span></td><td><input type="text" id="fat-1" value="Até R$ 50 mil/mês"></td><td><input type="text" id="sn-1" value="R$ 497,00"></td><td><input type="text" id="lp-1" value="R$ 897,00"></td></tr>
+              <tr><td><span class="plan-name">PLUS</span></td><td><input type="text" id="fat-2" value="R$ 50k a R$ 100k/mês"></td><td><input type="text" id="sn-2" value="R$ 697,00"></td><td><input type="text" id="lp-2" value="R$ 1.297,00"></td></tr>
+              <tr><td><span class="plan-name">PREMIUM</span></td><td><input type="text" id="fat-3" value="R$ 100k a R$ 300k/mês"></td><td><input type="text" id="sn-3" value="R$ 997,00"></td><td><input type="text" id="lp-3" value="R$ 1.597,00"></td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-      <p class="sec">Assinatura</p>
+
+      <p class="sec">Regime e plano inicial do contrato</p>
       <div class="row2">
+        <div class="fg">
+          <label>Regime tributário</label>
+          <select id="f-regime">
+            <option value="Simples Nacional">Simples Nacional</option>
+            <option value="Lucro Presumido">Lucro Presumido</option>
+            <option value="Lucro Real">Lucro Real</option>
+            <option value="MEI">MEI</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Plano inicial</label>
+          <select id="f-plano">
+            <option value="FLEXÍVEL">FLEXÍVEL</option>
+            <option value="BASIC">BASIC</option>
+            <option value="PLUS">PLUS</option>
+            <option value="PREMIUM">PREMIUM</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="sec">Datas e assinatura</p>
+      <div class="row3">
         <div class="fg"><label>Data de início</label><input type="date" id="f-inicio"></div>
-        <div class="fg"><label>Cidade</label><input type="text" id="f-local" value="Santa Luzia" placeholder="Ex: Santa Luzia"></div>
+        <div class="fg"><label>Dia de vencimento</label><input type="text" id="f-venc" placeholder="Ex: 10"></div>
+        <div class="fg"><label>Cidade</label><input type="text" id="f-local" value="Santa Luzia"></div>
       </div>
       <div class="actions">
         <button class="btn" onclick="goStep(2)">← Voltar</button>
@@ -141,6 +200,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     </div>
   </div>
 
+  <!-- STEP 4: Review & generate -->
   <div class="panel" id="p4">
     <div class="card">
       <div class="card-title">Resumo e geração</div>
@@ -153,7 +213,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     </div>
     <div class="success-box" id="success-box">
       <strong>✓ Contrato gerado com sucesso!</strong>
-      Abra o arquivo <strong>.html</strong> no Chrome ou Edge, pressione <strong>Ctrl+P</strong> → <strong>"Salvar como PDF"</strong> para gerar o PDF final.
+      Abra o arquivo <strong>.html</strong> no Chrome ou Edge → <strong>Ctrl+P</strong> → <strong>"Salvar como PDF"</strong>.
     </div>
   </div>
 </div>
@@ -161,109 +221,81 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <script>
 const uploadedFiles={cs:null,cnpj:null};
 function setupUpload(inputId,zoneId,nameId,key){
-  const input=document.getElementById(inputId);
-  const zone=document.getElementById(zoneId);
-  const nameEl=document.getElementById(nameId);
+  const input=document.getElementById(inputId),zone=document.getElementById(zoneId),nameEl=document.getElementById(nameId);
   input.addEventListener('change',function(e){
-    e.stopPropagation();
-    const f=this.files[0];
-    if(!f)return;
-    uploadedFiles[key]=f;
-    zone.classList.add('ok');
-    nameEl.textContent='✓ '+f.name;
-    checkFiles();
+    e.stopPropagation();const f=this.files[0];if(!f)return;
+    uploadedFiles[key]=f;zone.classList.add('ok');nameEl.textContent='✓ '+f.name;checkFiles();
   });
 }
 setupUpload('fcs','zone-cs','fn-cs','cs');
 setupUpload('fcnpj','zone-cnpj','fn-cnpj','cnpj');
 function checkFiles(){document.getElementById('btn-ia').disabled=!(uploadedFiles.cs||uploadedFiles.cnpj)}
+function toggleFlex(){
+  const on=document.getElementById('tog-flex').checked;
+  document.getElementById('bloco-planos').style.display=on?'block':'none';
+}
 function goStep(n){
   [1,2,3,4].forEach(i=>{
     document.getElementById('p'+i).classList.remove('show');
-    const s=document.getElementById('stp'+i);
-    s.classList.remove('active','done');
-    if(i<n)s.classList.add('done');
-    if(i===n)s.classList.add('active');
+    const s=document.getElementById('stp'+i);s.classList.remove('active','done');
+    if(i<n)s.classList.add('done');if(i===n)s.classList.add('active');
   });
   document.getElementById('p'+n).classList.add('show');
   if(n===4)buildResumo();
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function goManual(){goStep(2)}
-function toB64(file){
-  return new Promise((res,rej)=>{
-    const r=new FileReader();
-    r.onload=()=>res(r.result.split(',')[1]);
-    r.onerror=()=>rej(new Error('Falha ao ler arquivo'));
-    r.readAsDataURL(file);
-  });
-}
-function getMime(file){
-  const n=file.name.toLowerCase();
-  if(n.endsWith('.pdf'))return'application/pdf';
-  if(n.endsWith('.png'))return'image/png';
-  return'image/jpeg';
-}
+function toB64(file){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result.split(',')[1]);r.onerror=()=>rej(new Error('Falha ao ler'));r.readAsDataURL(file);})}
+function getMime(file){const n=file.name.toLowerCase();if(n.endsWith('.pdf'))return'application/pdf';if(n.endsWith('.png'))return'image/png';return'image/jpeg'}
 async function extractIA(){
-  const btn=document.getElementById('btn-ia');
-  const bar=document.getElementById('bar1');
+  const btn=document.getElementById('btn-ia'),bar=document.getElementById('bar1');
   btn.disabled=true;bar.classList.add('show');
   try{
     const parts=[];
     for(const[k,f]of Object.entries(uploadedFiles)){
-      if(!f)continue;
-      const b64=await toB64(f);
-      const mt=getMime(f);
+      if(!f)continue;const b64=await toB64(f);const mt=getMime(f);
       if(mt==='application/pdf'){parts.push({type:'document',source:{type:'base64',media_type:mt,data:b64}})}
       else{parts.push({type:'image',source:{type:'base64',media_type:mt,data:b64}})}
     }
     parts.push({type:'text',text:'Analise estes documentos (Contrato Social e/ou Cartão CNPJ) e extraia os dados. Responda SOMENTE com JSON, sem texto adicional, sem backticks. Formato: {"socio":"nome completo","cpf":"CPF formatado","qualificacao":"cargo/qualificação","razao_social":"razão social","cnpj":"CNPJ formatado","endereco":"endereço completo com CEP"}'});
-    
-    // Chama o proxy /api/claude na Vercel (que tem a API key no servidor)
-    const resp=await fetch('/api/claude',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({messages:[{role:'user',content:parts}]})
-    });
-    
+    const resp=await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:[{role:'user',content:parts}]})});
     if(!resp.ok){const err=await resp.text();throw new Error('Erro no servidor: '+resp.status+' — '+err)}
-    
     const data=await resp.json();
     let txt=(data.content||[]).map(c=>c.text||'').join('').trim().replace(/```json|```/g,'').trim();
     const d=JSON.parse(txt);
-    [['socio','f-socio','b-socio'],['cpf','f-cpf','b-cpf'],['qualificacao','f-qual','b-qual'],
-     ['razao_social','f-razao','b-razao'],['cnpj','f-cnpj','b-cnpj'],['endereco','f-end','b-end']
-    ].forEach(([key,fid,bid])=>{
+    [['socio','f-socio','b-socio'],['cpf','f-cpf','b-cpf'],['qualificacao','f-qual','b-qual'],['razao_social','f-razao','b-razao'],['cnpj','f-cnpj','b-cnpj'],['endereco','f-end','b-end']].forEach(([key,fid,bid])=>{
       if(d[key]){document.getElementById(fid).value=d[key];document.getElementById(bid).style.display='inline-block';}
     });
     goStep(2);
-  }catch(e){
-    alert('Não foi possível extrair automaticamente.\n\nDetalhe: '+e.message+'\n\nPreencha manualmente.');
-    goStep(2);
-  }finally{bar.classList.remove('show');btn.disabled=false;}
+  }catch(e){alert('Não foi possível extrair automaticamente.\n\nDetalhe: '+e.message+'\n\nPreencha manualmente.');goStep(2);}
+  finally{bar.classList.remove('show');btn.disabled=false;}
 }
 function v(id){return(document.getElementById(id)||{}).value||''}
 function fmtShort(s){if(!s)return'___';const[y,m,d]=s.split('-');return d+'/'+m+'/'+y}
-function fmtLong(s){
-  if(!s)return'___';const[y,m,d]=s.split('-');
-  const ms=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-  return parseInt(d)+' de '+ms[parseInt(m)-1]+' de '+y;
+function fmtLong(s){if(!s)return'___';const[y,m,d]=s.split('-');const ms=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];return parseInt(d)+' de '+ms[parseInt(m)-1]+' de '+y}
+function getPlanos(){
+  const nomes=['FLEXÍVEL','BASIC','PLUS','PREMIUM'];
+  return nomes.map((n,i)=>({nome:n,fat:v('fat-'+i)||'—',sn:v('sn-'+i)||'—',lp:v('lp-'+i)||'—'}));
 }
-function getData(){return{socio:v('f-socio'),cpf:v('f-cpf'),qual:v('f-qual'),razao:v('f-razao'),cnpj_val:v('f-cnpj'),end:v('f-end'),plano:v('f-plano'),regime:v('f-regime'),valor:v('f-valor'),venc:v('f-venc'),inicio:v('f-inicio'),local:v('f-local')}}
+function getData(){
+  return{socio:v('f-socio'),cpf:v('f-cpf'),qual:v('f-qual'),razao:v('f-razao'),cnpj_val:v('f-cnpj'),
+    end:v('f-end'),regime:v('f-regime'),plano:v('f-plano'),venc:v('f-venc'),inicio:v('f-inicio'),
+    local:v('f-local'),flexAtivo:document.getElementById('tog-flex').checked,planos:getPlanos()};
+}
 function buildResumo(){
   const d=getData();
-  const rows=[['Cliente',d.razao||'—'],['CNPJ',d.cnpj_val||'—'],['Representante',d.socio||'—'],['Plano',(d.plano&&d.regime)?d.plano+' — '+d.regime:'—'],['Valor mensal',d.valor||'—'],['Início',d.inicio?fmtShort(d.inicio):'—'],['Vencimento',d.venc?'Todo dia '+d.venc:'—']];
+  const rows=[['Cliente',d.razao||'—'],['CNPJ',d.cnpj_val||'—'],['Representante',d.socio||'—'],
+    ['Regime',d.regime||'—'],['Plano inicial',d.plano||'—'],
+    ['Flexibilização',d.flexAtivo?'✓ Incluída no contrato':'✗ Não incluída'],
+    ['Início',d.inicio?fmtShort(d.inicio):'—'],['Vencimento',d.venc?'Todo dia '+d.venc:'—']];
   document.getElementById('resumo').innerHTML=rows.map(([l,val])=>`<div class="sum-row"><span class="sum-lbl">${l}</span><span class="sum-val">${val}</span></div>`).join('');
 }
 async function gerarContrato(){
-  const btn=document.getElementById('btn-gerar');
-  const bar=document.getElementById('bar4');
+  const btn=document.getElementById('btn-gerar'),bar=document.getElementById('bar4');
   btn.disabled=true;bar.classList.add('show');
-  const d=getData();
-  const html=buildContractHTML(d);
+  const d=getData();const html=buildContractHTML(d);
   const blob=new Blob([html],{type:'text/html;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');
   a.href=url;a.download='Contrato_'+(d.razao||'cliente').replace(/[^a-zA-Z0-9]/g,'_')+'.html';
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
   bar.classList.remove('show');btn.disabled=false;
@@ -271,23 +303,71 @@ async function gerarContrato(){
 }
 function buildContractHTML(d){
   const inicio=fmtShort(d.inicio);const dataExt=fmtLong(d.inicio);
-  return`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><style>@page{margin:2.5cm}body{font-family:Arial,sans-serif;font-size:11pt;line-height:1.8;color:#000}h1{font-size:12pt;text-align:center;font-weight:bold;margin-bottom:1.5em;text-transform:uppercase}p{margin-bottom:.85em;text-align:justify}.b{font-weight:bold}.sign-area{margin-top:4em}.sign-block{margin-top:2.5em}.sign-line{border-top:1px solid #000;width:65%;margin-bottom:5px}</style></head><body>
+  // Calcula o valor do plano inicial conforme regime
+  const planoAtual=d.planos.find(p=>p.nome===d.plano)||d.planos[0];
+  const valorAtual=(d.regime==='Simples Nacional'||d.regime==='MEI')?planoAtual.sn:planoAtual.lp;
+
+  // Tabela de planos (usada só se flexAtivo)
+  const tabelaPlanos=d.flexAtivo?`
+<p><strong>CLÁUSULA SÉTIMA.</strong> O valor mensal deste contrato será ajustado automaticamente de acordo com o faturamento mensal da CONTRATANTE, conforme as faixas a seguir:</p>
+<table style="width:100%;border-collapse:collapse;margin:1em 0;font-size:9.5pt">
+<thead><tr style="background:#f0f0f0">
+  <th style="border:1px solid #999;padding:6px 8px;text-align:left">Plano</th>
+  <th style="border:1px solid #999;padding:6px 8px;text-align:left">Faturamento mensal</th>
+  <th style="border:1px solid #999;padding:6px 8px;text-align:center">Simples Nacional</th>
+  <th style="border:1px solid #999;padding:6px 8px;text-align:center">Lucro Presumido</th>
+</tr></thead>
+<tbody>
+${d.planos.map(p=>{
+  const destaque=p.nome===d.plano?'background:#e8f5e9;font-weight:bold':'';
+  return`<tr style="${destaque}">
+    <td style="border:1px solid #999;padding:6px 8px;font-weight:bold">${p.nome}</td>
+    <td style="border:1px solid #999;padding:6px 8px">${p.fat}</td>
+    <td style="border:1px solid #999;padding:6px 8px;text-align:center">${p.sn}</td>
+    <td style="border:1px solid #999;padding:6px 8px;text-align:center">${p.lp}</td>
+  </tr>`}).join('')}
+</tbody></table>
+<p>O plano atual da CONTRATANTE é o <strong>PLANO ${d.plano}</strong>, no regime <strong>${d.regime}</strong>, com honorários mensais de <strong>${valorAtual}</strong>. A mudança de faixa de faturamento implicará automaticamente no ajuste dos honorários conforme a tabela acima, mediante comunicação prévia de 30 (trinta) dias.</p>
+<p><strong>PARÁGRAFO PRIMEIRO.</strong> Os honorários serão reajustados no mês de janeiro de cada ano, tendo como base a variação do Salário-Mínimo vigente no País.</p>
+<p><strong>PARÁGRAFO SEGUNDO.</strong> Os honorários foram definidos com base no volume de serviços na data de assinatura. Novos procedimentos fiscais ou contábeis exigidos pelas autoridades constituirão motivo legítimo para renegociação.</p>
+<p><strong>PARÁGRAFO TERCEIRO.</strong> Os pagamentos serão realizados todo dia <strong>${d.venc}</strong> de cada mês, com o primeiro vencimento em <strong>${inicio}</strong>.</p>
+<p><strong>PARÁGRAFO QUARTO.</strong> O pagamento dar-se-á através de Boleto Bancário encaminhado ao e-mail fornecido pela CONTRATANTE.</p>
+<p><strong>PARÁGRAFO QUINTO.</strong> A CONTRATANTE pagará multa de 2% (dois por cento) e juros moratórios de 1% (um por cento) ao mês em caso de atraso.</p>
+<p><strong>PARÁGRAFO SEXTO.</strong> Os serviços de Departamento Pessoal para colaboradores CLT não estão incluídos neste contrato. Caso necessário, será cobrada taxa adicional de R$ 70,00 por colaborador registrado.</p>`
+  :`
+<p><strong>CLÁUSULA SÉTIMA.</strong> Pelos serviços ora contratados, a CONTRATANTE pagará à CONTRATADA o valor mensal de <strong>${valorAtual}</strong>, no regime <strong>${d.regime}</strong>, com vencimento todo dia <strong>${d.venc}</strong> de cada mês, com o primeiro vencimento em <strong>${inicio}</strong>.</p>
+<p><strong>PARÁGRAFO PRIMEIRO.</strong> Os honorários serão reajustados no mês de janeiro de cada ano, tendo como base a variação do Salário-Mínimo vigente no País.</p>
+<p><strong>PARÁGRAFO SEGUNDO.</strong> O pagamento dar-se-á através de Boleto Bancário encaminhado ao e-mail fornecido pela CONTRATANTE.</p>
+<p><strong>PARÁGRAFO TERCEIRO.</strong> A CONTRATANTE pagará multa de 2% (dois por cento) e juros moratórios de 1% (um por cento) ao mês em caso de atraso.</p>`;
+
+  return`<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+<style>
+@page{margin:2.5cm}
+body{font-family:Arial,sans-serif;font-size:11pt;line-height:1.8;color:#000}
+h1{font-size:12pt;text-align:center;font-weight:bold;margin-bottom:1.5em;text-transform:uppercase}
+p{margin-bottom:.85em;text-align:justify}
+.b{font-weight:bold}
+.sign-area{margin-top:4em}.sign-block{margin-top:2.5em}
+.sign-line{border-top:1px solid #000;width:65%;margin-bottom:5px}
+</style></head><body>
 <h1>Contrato de Prestação de Serviços de<br>Assessoria Financeira e Contábil Especializada</h1>
-<p>Pelo presente instrumento particular, <span class="b">${d.socio}</span>, inscrito(a) no CPF sob o nº. <span class="b">${d.cpf}</span>, ${d.qual} da empresa <span class="b">${d.razao}</span>, CNPJ sob o n°. <span class="b">${d.cnpj_val}</span>, situada na <span class="b">${d.end}</span>, doravante denominada <strong>CONTRATANTE</strong> e <strong>DIGITAL+ WEB CONTABILIDADE LTDA</strong>, CNPJ 26.886.182/0001-33, registrada perante o Conselho Regional de Contabilidade sob o n° MG-012404/O, com sede na Av. das Indústrias, 4747, Sala 8, Vila Olga, Santa Luzia - MG, 33040-140, representada pela sua representante legal <strong>REGINA DUARTE REIS</strong>, registrada perante o Conselho Regional de Contabilidade sob o n° MG-110001/O-5, doravante denominada <strong>CONTRATADA</strong>, têm justo e contratado o que se segue:</p>
+<p>Pelo presente instrumento particular, <span class="b">${d.socio}</span>, inscrito(a) no CPF sob o nº. <span class="b">${d.cpf}</span>, ${d.qual} da empresa <span class="b">${d.razao}</span>, CNPJ sob o n°. <span class="b">${d.cnpj_val}</span>, situada na <span class="b">${d.end}</span>, doravante denominada <strong>CONTRATANTE</strong> e <strong>DIGITAL+ WEB CONTABILIDADE LTDA</strong>, CNPJ 26.886.182/0001-33, registrada perante o Conselho Regional de Contabilidade sob o n° MG-012404/O, com sede na Av. das Indústrias, 4747, Sala 8, Vila Olga, Santa Luzia - MG, 33040-140, representada por <strong>REGINA DUARTE REIS</strong>, CRC MG-110001/O-5, doravante denominada <strong>CONTRATADA</strong>, têm justo e contratado o que se segue:</p>
+
 <p><strong>CLÁUSULA PRIMEIRA.</strong> O escritório contratado obriga-se a prestar seus serviços profissionais ao contratante, nas seguintes áreas:</p>
-<p><strong>1. CONTABILIDADE</strong><br>1.1. Elaboração da Contabilidade de acordo com as Normas Brasileiras de Contabilidade.<br>1.2. Apuração de balancetes.<br>1.3. Elaboração do Balanço anual e demonstrativo de resultados.<br>1.4. Gerar todos os Livros e Registros Obrigatórios.<br>1.5. Transmissão de arquivos eletrônicos digitais anuais.</p>
-<p><strong>2. OBRIGAÇÕES FISCAIS</strong><br>2.1. Orientação e controle de aplicação dos dispositivos legais vigentes.<br>2.2. Elaboração dos registros fiscais obrigatórios perante os órgãos municipais, estaduais e federais.<br>2.3. Apuração dos tributos conforme a legislação em vigor.<br>2.4. Transmissão das obrigações acessórias pertinentes ao regime tributário contratado.</p>
-<p><strong>3. DEPARTAMENTO PESSOAL</strong><br>3.1. Elaboração da folha de pagamento de funcionários, quando houver.<br>3.2. Cálculo e recolhimento de encargos sociais (FGTS, INSS, IRRF).<br>3.3. Admissões, demissões e rescisões contratuais.<br>3.4. Elaboração de RAIS, DIRF e demais obrigações acessórias trabalhistas.</p>
-<p><strong>CLÁUSULA SEGUNDA.</strong> O plano de serviços contratado é o <strong>PLANO ${d.plano}</strong>, modalidade <strong>${d.regime}</strong>, com vigência a partir de <strong>${inicio}</strong>.</p>
-<p><strong>CLÁUSULA TERCEIRA.</strong> Pelos serviços ora contratados, o CONTRATANTE pagará à CONTRATADA o valor mensal de <strong>${d.valor}</strong>, com vencimento todo dia <strong>${d.venc}</strong> de cada mês.</p>
-<p><strong>PARÁGRAFO ÚNICO.</strong> O valor dos honorários poderá ser reajustado anualmente com base na variação do IGPM/FGV, mediante notificação prévia de 30 (trinta) dias.</p>
-<p><strong>CLÁUSULA QUARTA.</strong> O CONTRATANTE obriga-se a fornecer todos os documentos necessários com antecedência mínima de 5 (cinco) dias úteis antes dos prazos legais.</p>
-<p><strong>CLÁUSULA QUINTA.</strong> A CONTRATADA não se responsabilizará por multas ou penalidades decorrentes de informações incorretas ou intempestivas fornecidas pelo CONTRATANTE.</p>
-<p><strong>CLÁUSULA SEXTA.</strong> O presente contrato tem prazo indeterminado, podendo ser rescindido mediante notificação por escrito com antecedência mínima de 30 (trinta) dias.</p>
-<p><strong>CLÁUSULA SÉTIMA.</strong> Em caso de inadimplência, a CONTRATADA poderá suspender os serviços após 30 dias do vencimento, com multa de 2% e juros de 1% ao mês.</p>
-<p><strong>CLÁUSULA OITAVA.</strong> As partes elegem o Foro da Comarca de Santa Luzia/MG como o único competente para dirimir quaisquer controvérsias oriundas deste contrato.</p>
+<p><strong>1. CONTABILIDADE</strong><br>1.1. Elaboração da Contabilidade de acordo com as Normas Brasileiras de Contabilidade.<br>1.2. Apuração de balancetes.<br>1.3. Elaboração do Balanço anual e demonstrativo de resultados.<br>1.4. Gerar todos os Livros e Registros Obrigatórios, mediante a Legislação pertinente.<br>1.5. Transmissão de arquivos eletrônicos digitais anuais.<br>1.6. Apuração de Impostos, contribuições e elaboração das guias para recolhimento.</p>
+<p><strong>2. OBRIGAÇÕES FISCAIS</strong><br>2.1. Orientação e controle de aplicação dos dispositivos legais vigentes, sejam federais, estaduais ou municipais.<br>2.2. Elaboração dos registros fiscais obrigatórios perante os órgãos municipais, estaduais e federais.<br>2.3. Apuração dos tributos conforme a legislação em vigor.<br>2.4. Transmissão das obrigações acessórias pertinentes ao regime tributário contratado.</p>
+<p><strong>3. DEPARTAMENTO DE PESSOAL</strong><br>3.1. Elaboração da folha de pagamento dos sócios e das guias de recolhimento dos encargos sociais.<br>3.2. Elaboração, orientação e controle da aplicação dos preceitos da CLT.<br>3.3. Gerar todos os Livros e Registros Obrigatórios, mediante a Legislação pertinente.<br>3.4. Transmissão de arquivos eletrônicos digitais mensais.</p>
+
+${tabelaPlanos}
+
+<p><strong>CLÁUSULA OITAVA.</strong> A CONTRATANTE pagará o valor de uma parcela mensal, rateada entre os meses de novembro e dezembro, destinada à execução das obrigações acessórias e encerramento do exercício fiscal.</p>
+<p><strong>CLÁUSULA NONA.</strong> O CONTRATANTE obriga-se a fornecer todos os documentos necessários com antecedência mínima de 5 (cinco) dias úteis antes dos prazos legais.</p>
+<p><strong>CLÁUSULA DÉCIMA.</strong> A CONTRATADA não se responsabilizará por multas ou penalidades decorrentes de informações incorretas ou intempestivas fornecidas pelo CONTRATANTE.</p>
+<p><strong>CLÁUSULA DÉCIMA PRIMEIRA.</strong> Este instrumento é feito por tempo indeterminado, iniciando-se em <strong>${inicio}</strong>, podendo ser rescindido por qualquer das partes mediante notificação escrita com antecedência mínima de 30 (trinta) dias.</p>
+<p><strong>CLÁUSULA DÉCIMA SEGUNDA.</strong> Os casos omissos serão resolvidos de comum acordo. Em caso de impasse, as partes elegem o Foro da Comarca de Santa Luzia/MG como o único competente para dirimir quaisquer controvérsias oriundas deste contrato.</p>
 <p>E, para firmeza, firmam o presente instrumento em duas vias de iguais forma e teor.</p>
-<div class="sign-area"><p><strong>${d.local}, ${dataExt}.</strong></p>
+<div class="sign-area">
+<p><strong>${d.local}, ${dataExt}.</strong></p>
 <div class="sign-block"><div class="sign-line"></div><strong>${d.socio}</strong><br>CONTRATANTE — ${d.razao}<br>CNPJ: ${d.cnpj_val}</div>
 <div class="sign-block"><div class="sign-line"></div><strong>DIGITAL+ WEB CONTABILIDADE LTDA</strong><br>CONTRATADA — CNPJ 26.886.182/0001-33<br>Representante: REGINA DUARTE REIS — CRC MG-110001/O-5</div>
 <div class="sign-block"><div class="sign-line"></div>Testemunha 1 — Nome: _____________________________ CPF: ______________________</div>

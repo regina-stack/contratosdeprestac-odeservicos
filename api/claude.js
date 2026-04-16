@@ -45,7 +45,7 @@ export default async function handler(req, res) {
             deadline_at: null,
             auto_close: true,
             locale: 'pt-BR',
-            sequence_enabled: false
+            sequence_enabled: true
           }
         })
       });
@@ -92,8 +92,7 @@ export default async function handler(req, res) {
             email: 'regina@digitalmaiscontabilidade.com.br',
             auths: ['email'],
             name: 'Regina Duarte Reis',
-            has_documentation: false,
-            sign_as: 'sign'
+            has_documentation: false
           }
         })
       });
@@ -112,8 +111,9 @@ export default async function handler(req, res) {
           list: {
             document_key: documentKey,
             signer_key: signerClienteKey,
-            sign_as: 'sign',
+            sign_as: 'party',
             refusable: true,
+            group: 1,
             message: `Olá ${nomeCliente}, segue o contrato de prestação de serviços da Digital+ Contabilidade para sua assinatura. Qualquer dúvida, estamos à disposição pelo WhatsApp.`
           }
         })
@@ -133,8 +133,9 @@ export default async function handler(req, res) {
           list: {
             document_key: documentKey,
             signer_key: signerReginaKey,
-            sign_as: 'sign',
+            sign_as: 'party',
             refusable: false,
+            group: 2,
             message: `Novo contrato gerado para ${nomeCliente}. Por favor, assine para finalizar.`
           }
         })
@@ -169,15 +170,8 @@ export default async function handler(req, res) {
         });
       }
 
-      // PASSO 8: Notificar Regina por e-mail
-      await fetch(`${BASE}/notifications?access_token=${token}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          request_signature_key: requestSignatureKeyRegina,
-          message: `Novo contrato para ${nomeCliente} aguarda sua assinatura.`
-        })
-      });
+      // Regina será notificada automaticamente pela Clicksign
+      // quando o cliente (grupo 1) concluir a assinatura.
 
       return res.status(200).json({
         success: true,

@@ -122,16 +122,16 @@ select option { background: var(--bg2); color: var(--text); }
   <div class="panel active" id="p1">
     <div class="info-card">Suba o Contrato Social e/ou o Cartão CNPJ. A IA irá ler os documentos e preencher automaticamente nome do sócio, CPF, razão social, CNPJ e endereço. Você poderá revisar e corrigir antes de gerar.</div>
 
-    <div class="upload-zone" id="zone-cs" onclick="document.getElementById('file-cs').click()">
-      <input type="file" id="file-cs" accept=".pdf,.jpg,.jpeg,.png" onchange="handleFile('cs', this)">
+    <div class="upload-zone" id="zone-cs" onclick="document.getElementById('file-cs').click()" style="cursor:pointer;">
+      <input type="file" id="file-cs" accept=".pdf,.jpg,.jpeg,.png,.docx,.dotx,.doc" onchange="handleFile('cs', this)" style="display:none;position:absolute;pointer-events:none;">
       <div class="upload-icon">📄</div>
       <div class="upload-label">Contrato Social</div>
       <div class="upload-sub">PDF ou imagem (JPG, PNG)</div>
       <div class="upload-name" id="fname-cs" style="display:none"></div>
     </div>
 
-    <div class="upload-zone" id="zone-cnpj" onclick="document.getElementById('file-cnpj').click()">
-      <input type="file" id="file-cnpj" accept=".pdf,.jpg,.jpeg,.png" onchange="handleFile('cnpj', this)">
+    <div class="upload-zone" id="zone-cnpj" onclick="document.getElementById('file-cnpj').click()" style="cursor:pointer;">
+      <input type="file" id="file-cnpj" accept=".pdf,.jpg,.jpeg,.png" onchange="handleFile('cnpj', this)" style="display:none;position:absolute;pointer-events:none;">
       <div class="upload-icon">🪪</div>
       <div class="upload-label">Cartão CNPJ</div>
       <div class="upload-sub">PDF ou imagem (JPG, PNG)</div>
@@ -349,13 +349,19 @@ function updateValor() {}
 
 function handleFile(type, input) {
   const file = input.files[0];
-  if (!file) return;
+  if (!file) {
+    console.log('Nenhum arquivo selecionado para', type);
+    return;
+  }
+  console.log('Arquivo selecionado:', file.name, file.type, file.size);
   files[type] = file;
-  document.getElementById('zone-' + type).classList.add('has-file');
+  const zone = document.getElementById('zone-' + type);
+  zone.classList.add('has-file');
   const nameEl = document.getElementById('fname-' + type);
   nameEl.textContent = '✓ ' + file.name;
   nameEl.style.display = 'block';
   document.getElementById('btn-extract').disabled = false;
+  console.log('Arquivo registrado com sucesso:', type, file.name);
 }
 
 function goStep(n) {
@@ -379,7 +385,16 @@ async function fileToBase64(file) {
 
 function getMediaType(file) {
   const ext = file.name.split('.').pop().toLowerCase();
-  return { pdf:'application/pdf', jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png' }[ext] || 'image/jpeg';
+  const map = {
+    pdf: 'application/pdf',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    dotx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    doc: 'application/msword'
+  };
+  return map[ext] || 'application/pdf';
 }
 
 async function extractWithAI() {
@@ -395,8 +410,8 @@ async function extractWithAI() {
       if (!file) continue;
       const b64 = await fileToBase64(file);
       const mt = getMediaType(file);
-      if (mt === 'application/pdf') {
-        contentParts.push({ type: 'document', source: { type: 'base64', media_type: mt, data: b64 } });
+      if (mt === 'application/pdf' || mt.includes('wordprocessingml') || mt === 'application/msword') {
+        contentParts.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } });
       } else {
         contentParts.push({ type: 'image', source: { type: 'base64', media_type: mt, data: b64 } });
       }

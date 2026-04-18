@@ -348,6 +348,17 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     </div>
   </div>
 
+
+<!-- Modal: Prévia do documento -->
+<div class="modal-bg" id="modal-preview">
+  <div class="modal-box" style="max-width:700px;max-height:90vh">
+    <button class="modal-close" onclick="fecharModal('modal-preview')">✕</button>
+    <div class="modal-title">Prévia do documento</div>
+    <div id="preview-content" style="margin-top:.5rem;text-align:center">
+      <iframe id="preview-frame" style="width:100%;height:60vh;border:1px solid var(--border2);border-radius:8px;background:#fff"></iframe>
+    </div>
+  </div>
+</div>
 </div><!-- /app -->
 
 <script>
@@ -493,7 +504,8 @@ function abrirPreview() {
     frame.src = '';
     const reader = new FileReader();
     reader.onload = e => {
-      frame.srcdoc = '<html><body style="margin:0;background:#fff;text-align:center"><img src="' + e.target.result + '" style="max-width:100%;height:auto"></body></html>';
+      frame.srcdoc = '<html><body style="margin:0;background:#fff;text-align:center"><img src="' + e.target.result + '" style="max-width:100%;height:auto">
+</body></html>';
     };
     reader.readAsDataURL(file);
   }
@@ -885,16 +897,6 @@ ${d.flexAtivo ? c7flex : c7simples}
 <div class="sign-block"><div class="sign-line"></div>Testemunha 2 — CPF: ______________________</div>
 </div>
 
-<!-- Modal: Prévia do documento -->
-<div class="modal-bg" id="modal-preview">
-  <div class="modal-box" style="max-width:700px;max-height:90vh">
-    <button class="modal-close" onclick="fecharModal('modal-preview')">✕</button>
-    <div class="modal-title">Prévia do documento</div>
-    <div id="preview-content" style="margin-top:.5rem;text-align:center">
-      <iframe id="preview-frame" style="width:100%;height:60vh;border:1px solid var(--border2);border-radius:8px;background:#fff"></iframe>
-    </div>
-  </div>
-</div>
 </body></html>`;
 }
 

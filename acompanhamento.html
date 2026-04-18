@@ -578,7 +578,10 @@ function renderizar() {
             : `<span style="color:var(--text);font-size:13px">${fmtDataCurta(prox)}</span>`;
 
     const acoes = c.status === 'assinou'
-      ? `<button class="btn-sm" onclick="abrirModalHist('${c.id}')">📋 Ver hist.</button>
+      ? `${c.document_key 
+          ? `<button class="btn-sm primary" onclick="baixarPDF('${c.document_key}', '${c.nome_cliente}')" title="Baixar PDF assinado">⬇ PDF</button>` 
+          : ''}
+         <button class="btn-sm" onclick="abrirModalHist('${c.id}')">📋 Ver hist.</button>
          <button class="btn-sm danger" onclick="encerrar('${c.id}')">✕</button>`
       : `<button class="btn-sm primary" onclick="abrirModalContato('${c.id}')">📞 Contato</button>
          <button class="btn-sm" onclick="abrirModalHist('${c.id}')">📋</button>
@@ -742,6 +745,24 @@ document.querySelectorAll('.modal-bg').forEach(m => {
 });
 
 // ── Init + auto-refresh ───────────────────────────────────────────────────────
+
+// ── Download PDF assinado ─────────────────────────────────────────────────────
+async function baixarPDF(documentKey, nomeCliente) {
+  const btn = event.target;
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = '⏳';
+  try {
+    const resp = await fetch('/api/claude', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'clicksign_pdf', documentKey })
+    });
+    const data = await resp.json();
+    if (!resp.ok || data.error) throw new Error(data.error || 'Erro');
+    window.open(data.download_url, '_blank');
+  } catch(e) { alert('Erro ao baixar PDF: ' + e.message); }
+  finally { btn.disabled = false; btn.textContent = orig; }
+}
+
 carregarContratos();
 setInterval(carregarContratos, 30000); // Atualiza a cada 30s
 

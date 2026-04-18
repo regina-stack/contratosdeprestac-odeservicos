@@ -544,8 +544,12 @@ carregarContratos();
 setInterval(carregarContratos, 30000); // Atualiza a cada 30s
 
 async function fazerLogout() {
-  if (window._sb) {
-    await window._sb.auth.signOut();
+  try {
+    const { createClient } = supabase;
+    const sb = createClient('https://rkritsqmaiqyjdonsqqn.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrcml0c3FtYWlxeWpkb25zcXFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMTY1NzYsImV4cCI6MjA5MTg5MjU3Nn0.uej4YE67KOiL1UZsYaxO2ZD8BOyKL0qBPMrVoFKc-tI');
+    await sb.auth.signOut();
+  } catch(e) {
+    console.error('Logout erro:', e);
   }
   window.location.href = '/login.html';
 }

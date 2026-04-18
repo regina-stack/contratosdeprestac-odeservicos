@@ -137,6 +137,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 .badge-expirado{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3)}
 .badge-expirado-row{background:rgba(239,68,68,.03) !important;border-left:3px solid #ef4444}
+
+.btn-wa{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;font-size:11px;font-weight:600;border-radius:6px;border:1px solid #25d366;background:rgba(37,211,102,.08);color:#25d366;cursor:pointer;font-family:'Exo 2',sans-serif;text-decoration:none;transition:all .15s;white-space:nowrap}
+.btn-wa:hover{background:rgba(37,211,102,.18)}
 </style>
 </head>
 <body>
@@ -466,6 +469,50 @@ async function toggleDrive(contratoId, salvoAtual, nomeCliente) {
   } catch(e) { alert('Erro: ' + e.message); }
 }
 
+
+// ── WhatsApp mensagens ───────────────────────────────────────────────────────
+function abrirWhatsApp(contrato, tipo) {
+  const nome  = contrato.nome_cliente || '';
+  const fone  = (contrato.whatsapp_cliente || '').replace(/\D/g, '');
+  
+  if (!fone) {
+    alert('Este contrato não tem WhatsApp cadastrado.');
+    return;
+  }
+  
+  const numero = fone.startsWith('55') ? fone : '55' + fone;
+  const diasPend = diasPendente(contrato.data_envio);
+  
+  let msg = '';
+  
+  if (tipo === 'envio') {
+    // Mensagem de envio do contrato
+    msg = encodeURIComponent(
+      `Olá ${nome}! 😊\n\n` +
+      `Seu contrato de prestação de serviços com a *Digital+ Contabilidade* foi enviado hoje para assinatura eletrônica.\n\n` +
+      `📧 *Verifique seu e-mail* — você receberá um link para assinar o documento de forma rápida e segura.\n\n` +
+      `Caso não encontre o e-mail, verifique a caixa de spam ou entre em contato conosco.\n\n` +
+      `Qualquer dúvida estamos à disposição! 🙏\n\n` +
+      `*Digital+ Web Contabilidade*`
+    );
+  } else {
+    // Mensagem de cadência (lembrete) — inclui link se disponível
+    const linkLembrete = contrato.clicksign_url 
+      ? '\n\n🔗 *Link para assinar:*\n' + contrato.clicksign_url 
+      : '\n\n📧 O link foi enviado para o seu e-mail. Caso não encontre, verifique a caixa de spam.';
+    msg = encodeURIComponent(
+      `Olá ${nome}! 😊\n\n` +
+      `Passando para lembrar que seu contrato com a *Digital+ Contabilidade* está aguardando sua assinatura há *${diasPend} dia(s)*. ` +
+      `Por favor, assine assim que possível! 🙏` +
+      linkLembrete +
+      `\n\nQualquer dúvida estamos à disposição!\n\n` +
+      `*Digital+ Web Contabilidade*`
+    );
+  }
+  
+  window.open('https://wa.me/' + numero + '?text=' + msg, '_blank');
+}
+
 const SUPA_URL = 'https://rkritsqmaiqyjdonsqqn.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrcml0c3FtYWlxeWpkb25zcXFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMTY1NzYsImV4cCI6MjA5MTg5MjU3Nn0.uej4YE67KOiL1UZsYaxO2ZD8BOyKL0qBPMrVoFKc-tI';
 
@@ -643,6 +690,7 @@ function renderizar() {
          <button class="btn-sm" onclick="abrirModalHist('${c.id}')">📋 Ver hist.</button>
          <button class="btn-sm danger" onclick="encerrar('${c.id}')">✕</button>`
       : `<button class="btn-sm primary" onclick="abrirModalContato('${c.id}')">📞 Contato</button>
+         ${c.whatsapp_cliente ? `<a class="btn-wa" href="javascript:void(0)" onclick="abrirWhatsApp(todosContratos.find(x=>x.id==='${c.id}'), 'cadencia')">💬 Lembrete</a>` : ''}
          <button class="btn-sm" onclick="abrirModalHist('${c.id}')">📋</button>
          <button class="btn-sm danger" onclick="encerrar('${c.id}')">✕</button>`;
 

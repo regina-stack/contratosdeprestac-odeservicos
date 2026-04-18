@@ -263,44 +263,50 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <div id="bloco-planos">
         <p class="sec">Tabela de planos — edite os valores conforme necessário</p>
         <div class="planos-config">
-          <table>
-            <thead><tr><th>Plano</th><th>Faturamento</th><th>Simples</th><th>L. Presumido</th><th>Entregas incluídas</th></tr></thead>
-            <tbody>
-              <tr><td><span class="plan-name">FLEXÍVEL</span></td><td><input type="text" id="fat-0" value="Até R$ 15 mil/mês"></td><td><input type="text" id="sn-0" value="R$ 297"></td><td><input type="text" id="lp-0" value="R$ 697"></td><td><textarea id="ent-0">Estratégia tributária personalizada
-Contabilidade completa
-Guias de impostos mensais
-Atendimento online e via WhatsApp e vídeo chamada
-Pró-labore dos sócios
-Demonstrações contábeis anuais</textarea></td></tr>
-              <tr><td><span class="plan-name">BASIC</span></td><td><input type="text" id="fat-1" value="Até R$ 50 mil/mês"></td><td><input type="text" id="sn-1" value="R$ 497"></td><td><input type="text" id="lp-1" value="R$ 897"></td><td><textarea id="ent-1">Estratégia tributária personalizada
-Contabilidade completa
-Guias de impostos mensais
-Atendimento online e via WhatsApp e vídeo chamada
-Pró-labore dos sócios
-Demonstrações contábeis anuais</textarea></td></tr>
-              <tr><td><span class="plan-name">PLUS</span></td><td><input type="text" id="fat-2" value="R$ 50k a 100k/mês"></td><td><input type="text" id="sn-2" value="R$ 697"></td><td><input type="text" id="lp-2" value="R$ 1.297"></td><td><textarea id="ent-2">Estratégia tributária personalizada
-Contabilidade completa
-Guias de impostos mensais
-Atendimento online e via WhatsApp e vídeo chamada
-Pró-labore dos sócios
-Demonstrações contábeis anuais
-Configuração do emissor de NF integrado à plataforma
-Monitoramento mensal do emissor fiscal</textarea></td></tr>
-              <tr><td><span class="plan-name">PREMIUM</span></td><td><input type="text" id="fat-3" value="R$ 100k a 300k/mês"></td><td><input type="text" id="sn-3" value="R$ 997"></td><td><input type="text" id="lp-3" value="R$ 1.597"></td><td><textarea id="ent-3">Estratégia tributária personalizada
-Contabilidade completa
-Guias de impostos mensais
-Atendimento online e via WhatsApp e vídeo chamada
-Pró-labore dos sócios
-Demonstrações contábeis anuais
-Configuração do emissor de NF integrado à plataforma
-Monitoramento mensal do emissor fiscal
-Sistema de gestão financeira
-Suporte mensal ao sistema de gestão financeira para apuração do lucro mensal
-Planejamento tributário anual</textarea></td></tr>
-            </tbody>
-          </table>
+          <!-- Toggle: Honorário Fixo ou Por Planos -->
+          <div class="hon-toggle-wrap">
+            <div class="hon-opt" id="hon-opt-planos" onclick="setHonMode('planos')" style="background:rgba(57,231,95,.1);border-color:var(--green);color:var(--green)">
+              <span style="font-size:16px">📊</span>
+              <div><strong>Por planos</strong><small>Tabela com múltiplos planos e faixas de faturamento</small></div>
+            </div>
+            <div class="hon-opt" id="hon-opt-fixo" onclick="setHonMode('fixo')">
+              <span style="font-size:16px">💰</span>
+              <div><strong>Honorário fixo</strong><small>Valor único — Acompanhamento mensal</small></div>
+            </div>
+          </div>
+
+          <!-- Honorário Fixo -->
+          <div id="hon-fixo-wrap" style="display:none">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-top:.75rem">
+              <div>
+                <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:5px">Nome do serviço</label>
+                <input type="text" id="hon-fixo-nome" value="Acompanhamento mensal" style="width:100%;padding:8px 12px;font-size:13px;border:1px solid var(--border2);border-radius:8px;background:var(--dark4);color:var(--text);outline:none;font-family:'Inter',sans-serif">
+              </div>
+              <div>
+                <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:5px">Valor mensal</label>
+                <input type="text" id="hon-fixo-valor" value="R$ " style="width:100%;padding:8px 12px;font-size:13px;border:1px solid var(--border2);border-radius:8px;background:var(--dark4);color:var(--text);outline:none;font-family:'Inter',sans-serif">
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabela por Planos -->
+          <div id="hon-planos-wrap">
+            <table id="planos-table">
+              <thead>
+                <tr>
+                  <th style="width:120px">Plano</th>
+                  <th>Faturamento</th>
+                  <th style="width:100px">Simples</th>
+                  <th style="width:110px">L. Presumido</th>
+                  <th>Entregas incluídas</th>
+                  <th style="width:36px"></th>
+                </tr>
+              </thead>
+              <tbody id="planos-tbody"></tbody>
+            </table>
+            <button onclick="addPlanRow()" style="margin-top:.75rem;padding:6px 14px;font-size:12px;font-weight:600;border:1px dashed var(--border2);border-radius:8px;background:transparent;color:var(--text2);cursor:pointer;font-family:'Exo 2',sans-serif;width:100%;transition:all .15s" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">+ Adicionar linha</button>
+          </div>
         </div>
-      </div>
       <p class="sec">Regime e datas</p>
       <div class="row2">
         <div class="fg"><label>Regime tributário</label>
@@ -343,6 +349,90 @@ Planejamento tributário anual</textarea></td></tr>
 </div><!-- /app -->
 
 <script>
+
+// ── Sistema de Honorários ─────────────────────────────────────────────────────
+let honMode = 'planos'; // 'planos' ou 'fixo'
+
+const defaultPlans = [
+  { nome: 'FLEXÍVEL', fat: 'Até R$ 15 mil/mês', sn: 'R$ 297', lp: 'R$ 697', ent: 'Estratégia tributária personalizada\nContabilidade completa\nGuias de impostos mensais\nAtendimento online e via WhatsApp e vídeo chamada' },
+  { nome: 'BASIC',    fat: 'Até R$ 50 mil/mês', sn: 'R$ 497', lp: 'R$ 897', ent: 'Estratégia tributária personalizada\nContabilidade completa\nGuias de impostos mensais\nAtendimento online e via WhatsApp e vídeo chamada' },
+  { nome: 'PLUS',     fat: 'R$ 50k a 100k/mês', sn: 'R$ 697', lp: 'R$ 1.297', ent: 'Estratégia tributária personalizada\nContabilidade completa\nGuias de impostos mensais\nAtendimento online e via WhatsApp e vídeo chamada' },
+  { nome: 'PREMIUM',  fat: 'R$ 100k a 300k/mês', sn: 'R$ 997', lp: 'R$ 1.597', ent: 'Estratégia tributária personalizada\nContabilidade completa\nGuias de impostos mensais\nAtendimento online e via WhatsApp e vídeo chamada' }
+];
+
+let plans = JSON.parse(JSON.stringify(defaultPlans));
+
+function setHonMode(mode) {
+  honMode = mode;
+  // Atualiza visual dos botões
+  document.getElementById('hon-opt-planos').style.background = mode === 'planos' ? 'rgba(57,231,95,.1)' : 'var(--dark4)';
+  document.getElementById('hon-opt-planos').style.borderColor = mode === 'planos' ? 'var(--green)' : 'var(--border2)';
+  document.getElementById('hon-opt-planos').style.color = mode === 'planos' ? 'var(--green)' : 'var(--text2)';
+  document.getElementById('hon-opt-fixo').style.background = mode === 'fixo' ? 'rgba(57,231,95,.1)' : 'var(--dark4)';
+  document.getElementById('hon-opt-fixo').style.borderColor = mode === 'fixo' ? 'var(--green)' : 'var(--border2)';
+  document.getElementById('hon-opt-fixo').style.color = mode === 'fixo' ? 'var(--green)' : 'var(--text2)';
+  // Mostra/esconde seções
+  document.getElementById('hon-fixo-wrap').style.display = mode === 'fixo' ? 'block' : 'none';
+  document.getElementById('hon-planos-wrap').style.display = mode === 'planos' ? 'block' : 'none';
+}
+
+function renderPlansTable() {
+  const tbody = document.getElementById('planos-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = plans.map((p, i) => `
+    <tr id="plan-row-${i}">
+      <td><input type="text" class="plan-input" value="${p.nome}" onchange="plans[${i}].nome=this.value" placeholder="Nome do plano"></td>
+      <td><input type="text" value="${p.fat}" onchange="plans[${i}].fat=this.value" placeholder="Ex: Até R$ 15 mil/mês"></td>
+      <td><input type="text" value="${p.sn}" onchange="plans[${i}].sn=this.value" placeholder="R$ 0"></td>
+      <td><input type="text" value="${p.lp}" onchange="plans[${i}].lp=this.value" placeholder="R$ 0"></td>
+      <td><textarea onchange="plans[${i}].ent=this.value" placeholder="Liste as entregas incluídas...">${p.ent}</textarea></td>
+      <td><button class="btn-del-row" onclick="deletePlanRow(${i})" title="Excluir este plano">✕</button></td>
+    </tr>`).join('');
+}
+
+function deletePlanRow(i) {
+  if (plans.length <= 1) { alert('O contrato precisa ter pelo menos um plano.'); return; }
+  plans.splice(i, 1);
+  renderPlansTable();
+}
+
+function addPlanRow() {
+  plans.push({ nome: 'NOVO PLANO', fat: '', sn: 'R$ 0', lp: 'R$ 0', ent: '' });
+  renderPlansTable();
+  // Foca no input do novo plano
+  setTimeout(() => {
+    const inputs = document.querySelectorAll('.plan-input');
+    if (inputs.length) inputs[inputs.length-1].focus();
+  }, 100);
+}
+
+function getPlansData() {
+  if (honMode === 'fixo') {
+    return {
+      tipo: 'fixo',
+      nome: document.getElementById('hon-fixo-nome')?.value || 'Acompanhamento mensal',
+      valor: document.getElementById('hon-fixo-valor')?.value || ''
+    };
+  }
+  // Lê valores atuais dos inputs antes de retornar
+  const rows = document.querySelectorAll('#planos-tbody tr');
+  rows.forEach((row, i) => {
+    const inputs = row.querySelectorAll('input, textarea');
+    if (inputs[0]) plans[i].nome = inputs[0].value;
+    if (inputs[1]) plans[i].fat  = inputs[1].value;
+    if (inputs[2]) plans[i].sn   = inputs[2].value;
+    if (inputs[3]) plans[i].lp   = inputs[3].value;
+    if (inputs[4]) plans[i].ent  = inputs[4].value;
+  });
+  return { tipo: 'planos', plans };
+}
+
+// Inicializa a tabela quando o step 3 é exibido
+function initPlansStep() {
+  renderPlansTable();
+  setHonMode('planos');
+}
+
 // ── Upload ────────────────────────────────────────────────────────────────────
 const uploadedFiles = { cs: null, cnpj: null };
 function setupUpload(inputId, zoneId, nameId, key) {
@@ -375,6 +465,7 @@ function goStep(n) {
     if (i === n) s.classList.add('active');
   });
   document.getElementById('p'+n).classList.add('show');
+  if (n === 3) { renderPlansTable(); setHonMode(honMode); }
   if (n === 4) buildResumo();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -456,17 +547,20 @@ function getData() {
     regime: v('f-regime'), plano: v('f-plano'),
     inicio: v('f-inicio'), vencData: v('f-venc-data'), local: v('f-local'),
     flexAtivo: document.getElementById('tog-flex').checked,
-    planos: getPlanos()
+    planos: (getPlansData().tipo === "planos" ? getPlansData().plans : [])
   };
 }
 
 // ── Resumo Step 4 ─────────────────────────────────────────────────────────────
 function buildResumo() {
   const d = getData();
+  const honRes = getPlansData();
   const rows = [
     ['Cliente', d.razao||'—'], ['CNPJ', d.cnpj_val||'—'],
     ['Representante', d.socio||'—'], ['Regime', d.regime||'—'],
-    ['Plano inicial', d.plano||'—'],
+    honRes.tipo === 'fixo' 
+      ? ['Honorário', `${honRes.nome} — ${honRes.valor}`]
+      : ['Plano inicial', d.plano||'—'],
     ['Flexibilização', d.flexAtivo ? '✓ Incluída' : '✗ Não incluída'],
     ['Início', d.inicio ? fmtDate(d.inicio) : '—'],
     ['1º vencimento', d.vencData ? fmtDate(d.vencData) : '—']
@@ -614,10 +708,16 @@ function buildContractHTML(d) {
   const inicio  = fmtDate(d.inicio);
   const dataExt = fmtDateLong(d.inicio);
   const venc    = fmtDate(d.vencData);
-  const planoAt = d.planos.find(p=>p.nome===d.plano) || d.planos[1];
-  const valor   = (d.regime==='Simples Nacional'||d.regime==='MEI') ? planoAt.sn : planoAt.lp;
+  // Pega dados do sistema de honorários
+  const honData = getPlansData();
+  const isFixo = honData.tipo === 'fixo';
+  
+  // Para honorário por planos, encontra o plano selecionado
+  const planoAt = !isFixo ? (honData.plans.find(p=>p.nome===d.plano) || honData.plans[0]) : null;
+  const valor = isFixo ? honData.valor : 
+    ((d.regime==='Simples Nacional'||d.regime==='MEI') ? planoAt?.sn : planoAt?.lp);
 
-  const tabelaHTML = `
+  const tabelaHTML = isFixo ? '' : `
 <table style="width:100%;border-collapse:collapse;margin:1em 0;font-size:9pt">
 <thead><tr style="background:#e8f5e9">
   <th style="border:1px solid #aaa;padding:6px 8px;text-align:left;width:10%">Plano</th>
@@ -626,18 +726,21 @@ function buildContractHTML(d) {
   <th style="border:1px solid #aaa;padding:6px 8px;text-align:center;width:12%">Lucro Presumido</th>
   <th style="border:1px solid #aaa;padding:6px 8px;text-align:left">Entregas Incluídas</th>
 </tr></thead><tbody>
-${d.planos.map(p => {
+\${honData.plans.map(p => {
   const dest = p.nome===d.plano ? 'background:#f0faf2;font-weight:bold' : '';
-  return `<tr style="${dest}">
-    <td style="border:1px solid #aaa;padding:6px 8px;font-weight:bold;vertical-align:top">${p.nome}</td>
-    <td style="border:1px solid #aaa;padding:6px 8px;vertical-align:top">${p.fat}</td>
-    <td style="border:1px solid #aaa;padding:6px 8px;text-align:center;vertical-align:top">${p.sn}</td>
-    <td style="border:1px solid #aaa;padding:6px 8px;text-align:center;vertical-align:top">${p.lp}</td>
-    <td style="border:1px solid #aaa;padding:6px 8px;vertical-align:top;font-size:8.5pt;line-height:1.6">${p.entregas.map(e=>'- '+e).join('<br>')}</td>
-  </tr>`;}).join('')}
-</tbody></table>`;
+  const entregas = (p.ent||'').split('\n').filter(e=>e.trim());
+  return \`<tr style="\${dest}">
+    <td style="border:1px solid #aaa;padding:6px 8px;font-weight:bold;vertical-align:top">\${p.nome}</td>
+    <td style="border:1px solid #aaa;padding:6px 8px;vertical-align:top">\${p.fat}</td>
+    <td style="border:1px solid #aaa;padding:6px 8px;text-align:center;vertical-align:top">\${p.sn}</td>
+    <td style="border:1px solid #aaa;padding:6px 8px;text-align:center;vertical-align:top">\${p.lp}</td>
+    <td style="border:1px solid #aaa;padding:6px 8px;vertical-align:top;font-size:8.5pt;line-height:1.6">\${entregas.map(e=>'- '+e).join('<br>')}</td>
+  </tr>\`;}).join('')}
+</tbody></table>\`;
 
-  const c7flex = `<p><strong>CLÁUSULA SÉTIMA.</strong> O valor mensal deste contrato será ajustado de acordo com o faturamento mensal da CONTRATANTE, conforme as faixas a seguir:</p>
+const c7fixo = `<p><strong>CLÁUSULA SÉTIMA.</strong> O valor mensal dos honorários contábeis referente ao serviço de <strong>${honData.nome||'Acompanhamento mensal'}</strong> é de <strong>${honData.valor}</strong>.</p>`;
+
+  const c7flex = isFixo ? c7fixo : `<p><strong>CLÁUSULA SÉTIMA.</strong> O valor mensal deste contrato será ajustado de acordo com o faturamento mensal da CONTRATANTE, conforme as faixas a seguir:</p>
 ${tabelaHTML}
 <p><strong>PARÁGRAFO PRIMEIRO.</strong> Os honorários serão reajustados no mês de janeiro de cada ano ou quando houver aumento dos serviços contratados, tendo como base a variação do Salário-Mínimo vigente no País.</p>
 <p><strong>PARÁGRAFO SEGUNDO.</strong> Os honorários ora estabelecidos foram definidos com base no volume de serviços prestados na data de assinatura deste contrato, bem como na legislação vigente. Caso as autoridades municipais, estaduais ou federais venham a instituir novos procedimentos de natureza fiscal ou contábil, ou ainda, havendo aumento significativo no volume dos serviços prestados, tal situação constituirá motivo legítimo para renegociação dos honorários aqui estipulados.</p>

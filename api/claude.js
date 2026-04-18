@@ -456,5 +456,39 @@ export default async function handler(req, res) {
     }
   }
 
+  
+  // ── Rota 7: Cancelar documento na Clicksign ───────────────────────────────
+  if (action === 'clicksign_cancelar') {
+    const token = process.env.CLICKSIGN_TOKEN;
+    if (!token) return res.status(500).json({ error: 'CLICKSIGN_TOKEN não configurado.' });
+
+    const { documentKey } = req.body;
+    if (!documentKey) return res.status(400).json({ error: 'documentKey é obrigatório.' });
+
+    try {
+      const BASE = 'https://app.clicksign.com/api/v1';
+
+      // Cancela o documento na Clicksign
+      const resp = await fetch(`${BASE}/documents/${documentKey}/cancel?access_token=${token}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!resp.ok) {
+        const err = await resp.text();
+        // Se já estava cancelado ou finalizado, não é erro crítico
+        return res.status(200).json({ 
+          success: false, 
+          message: 'Documento não pôde ser cancelado na Clicksign (pode já estar finalizado ou cancelado).'
+        });
+      }
+
+      return res.status(200).json({ success: true, message: 'Documento cancelado na Clicksign.' });
+
+    } catch(e) {
+      return res.status(200).json({ success: false, message: e.message });
+    }
+  }
+
     return res.status(400).json({ error: 'Ação desconhecida.' });
 }

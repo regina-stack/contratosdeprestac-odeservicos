@@ -479,6 +479,27 @@ function setupUpload(inputId, zoneId, nameId, key) {
 }
 setupUpload('fcs',   'zone-cs',   'fn-cs',   'cs');
 setupUpload('fcnpj', 'zone-cnpj', 'fn-cnpj', 'cnpj');
+
+// ── Prévia do documento ───────────────────────────────────────────────────────
+function abrirPreview() {
+  const frame = document.getElementById('preview-frame');
+  const file  = uploadedFiles.cs || uploadedFiles.cnpj;
+  if (!file) return;
+
+  if (file.type === 'application/pdf') {
+    frame.src = URL.createObjectURL(file);
+    frame.srcdoc = '';
+  } else {
+    frame.src = '';
+    const reader = new FileReader();
+    reader.onload = e => {
+      frame.srcdoc = '<html><body style="margin:0;background:#fff;text-align:center"><img src="' + e.target.result + '" style="max-width:100%;height:auto"></body></html>';
+    };
+    reader.readAsDataURL(file);
+  }
+  document.getElementById('modal-preview').classList.add('open');
+}
+
 function checkFiles() {
   const temArquivo = !!(uploadedFiles.cs || uploadedFiles.cnpj);
   document.getElementById('btn-ia').disabled = !temArquivo;

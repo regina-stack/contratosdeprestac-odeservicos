@@ -440,8 +440,9 @@ function setupUpload(inputId, zoneId, nameId, key) {
   const zone  = document.getElementById(zoneId);
   const nameEl = document.getElementById(nameId);
 
-  // Clique na zone abre o seletor de arquivo
-  zone.addEventListener('click', function() {
+  // Clique na zone abre o seletor de arquivo (evita duplo disparo)
+  zone.addEventListener('click', function(e) {
+    if (e.target === input) return; // evita loop
     input.click();
   });
 

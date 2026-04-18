@@ -295,6 +295,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <div class="cadencia-box" id="mh-cadencia"></div>
     <p class="sec">Contatos realizados</p>
     <div id="mh-lista"></div>
+    <div id="mh-alteracoes-wrap" style="margin-top:1rem;display:none">
+      <p class="sec">Histórico de alterações</p>
+      <div id="mh-alteracoes"></div>
+    </div>
   </div>
 </div>
 
@@ -744,7 +748,10 @@ async function salvarEdicao() {
   if (!nome) { msg.textContent = '⚠ Nome obrigatório.'; msg.style.color='var(--amber)'; return; }
 
   btn.disabled = true; btn.textContent = 'Salvando...';
-  msg.textContent = ''; 
+  msg.textContent = '';
+
+  // Pega valores anteriores para comparar
+  const antes = todosContratos.find(x => x.id === id);
 
   const resp = await supaFetch(`contratos?id=eq.${id}`, {
     method: 'PATCH',
@@ -758,7 +765,32 @@ async function salvarEdicao() {
   });
 
   if (resp.ok) {
-    msg.textContent = '✅ Salvo!'; msg.style.color = 'var(--teal)';
+    // Registra cada campo alterado no histórico
+    const campos = [
+      { campo: 'Nome', anterior: antes?.nome_cliente, novo: nome },
+      { campo: 'E-mail', anterior: antes?.email_cliente, novo: email },
+      { campo: 'WhatsApp', anterior: antes?.whatsapp_cliente, novo: whats },
+      { campo: 'Empresa', anterior: antes?.razao_social, novo: razao },
+      { campo: 'Data de envio', anterior: antes?.data_envio, novo: envio }
+    ];
+
+    const alteracoes = campos.filter(c => (c.anterior||'') !== (c.novo||''));
+
+    for (const alt of alteracoes) {
+      await supaFetch('historico_alteracoes', {
+        method: 'POST',
+        body: JSON.stringify({
+          contrato_id: id,
+          feito_por: nomeAtendente || 'Sistema',
+          campo: alt.campo,
+          valor_anterior: alt.anterior || '(vazio)',
+          valor_novo: alt.novo || '(vazio)'
+        })
+      });
+    }
+
+    msg.textContent = `✅ Salvo! ${alteracoes.length} campo(s) alterado(s).`;
+    msg.style.color = 'var(--teal)';
     btn.textContent = '✓ Salvo!';
     setTimeout(() => { fecharModal('modal-editar'); carregarContratos(); }, 800);
   } else {
@@ -1101,7 +1133,7 @@ async function salvarContato() {
 }
 
 // ── Modal histórico ───────────────────────────────────────────────────────────
-function abrirModalHist(id) {
+async function abrirModalHist(id) {
   const c      = todosContratos.find(x => x.id === id);
   const feitas = c.historico.map(h => h.data_contato);
   const todas  = calcularDatas(c.data_envio);
@@ -1127,6 +1159,29 @@ function abrirModalHist(id) {
     : '<p style="color:var(--text2);font-size:13px">Nenhum contato registrado ainda.</p>';
 
   document.getElementById('modal-hist').classList.add('open');
+
+  // Carrega histórico de alterações
+  try {
+    const altResp = await supaFetch(`historico_alteracoes?contrato_id=eq.${id}&order=created_at.desc`);
+    const alts = await altResp.json();
+    const wrapEl = document.getElementById('mh-alteracoes-wrap');
+    const altEl  = document.getElementById('mh-alteracoes');
+
+    if (alts?.length > 0) {
+      wrapEl.style.display = 'block';
+      altEl.innerHTML = alts.map(a => {
+        const dt = new Date(a.created_at).toLocaleString('pt-BR');
+        return `<div class="hist-item" style="border-left-color:var(--teal)">
+          <div class="hist-date">${dt} · ${a.feito_por||'Sistema'}</div>
+          <div class="hist-tipo">${a.campo}: <span style="color:#f87171;text-decoration:line-through">${a.valor_anterior}</span> → <span style="color:var(--green)">${a.valor_novo}</span></div>
+        </div>`;
+      }).join('');
+    } else {
+      wrapEl.style.display = 'none';
+    }
+  } catch(e) {
+    console.error('Erro ao carregar alterações:', e);
+  }
 }
 
 // ── Encerrar ──────────────────────────────────────────────────────────────────

@@ -1064,11 +1064,38 @@ function abrirModalHist(id) {
 async function encerrar(id) {
   const c = todosContratos.find(x => x.id === id);
   const nome = c?.nome_cliente || 'este cliente';
-  if (!confirm(`⚠️ Encerrar o contrato de ${nome}?\n\nO contrato será movido para o histórico de encerrados e não aparecerá mais no painel ativo.\n\nEsta ação não pode ser desfeita.`)) return;
+  const temClicksign = !!c?.document_key;
+
+  const confirmMsg = `⚠️ Encerrar o contrato de ${nome}?\n\n` +
+    `O contrato será movido para o histórico de encerrados e não aparecerá mais no painel ativo.` +
+    (temClicksign ? `\n\nO documento também será cancelado na Clicksign — o cliente para de receber lembretes.` : '') +
+    `\n\nEsta ação não pode ser desfeita.`;
+
+  if (!confirm(confirmMsg)) return;
+
+  // 1. Encerra no Supabase
   await supaFetch(`contratos?id=eq.${id}`, {
     method: 'PATCH',
     body: JSON.stringify({ status: 'encerrado' })
   });
+
+  // 2. Cancela na Clicksign se tiver document_key
+  if (temClicksign) {
+    try {
+      const resp = await fetch('/api/claude', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'clicksign_cancelar', documentKey: c.document_key })
+      });
+      const data = await resp.json();
+      if (!data.success) {
+        console.warn('Clicksign cancelar:', data.message);
+      }
+    } catch(e) {
+      console.error('Erro ao cancelar na Clicksign:', e);
+    }
+  }
+
   carregarContratos();
 }
 

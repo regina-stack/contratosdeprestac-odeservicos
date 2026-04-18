@@ -243,21 +243,37 @@ export default async function handler(req, res) {
     try {
       const BASE = 'https://app.clicksign.com/api/v1';
       
-      // Busca todos os documentos pendentes (sem filtro de status)
-      const resp = await fetch(`${BASE}/documents?access_token=${token}`, {
-        headers: { 'Content-Type': 'application/json' }
-      });
-      
-      if (!resp.ok) {
-        const err = await resp.text();
-        return res.status(resp.status).json({ error: 'Erro ao buscar documentos: ' + err });
+      // Busca todos os documentos com paginação
+      let allDocs = [];
+      let page = 1;
+      while (true) {
+        const resp = await fetch(`${BASE}/documents?access_token=${token}&page=${page}&per_page=25`, {
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (!resp.ok) {
+          const err = await resp.text();
+          return res.status(resp.status).json({ error: 'Erro ao buscar documentos: ' + err });
+        }
+        const data = await resp.json();
+        const docs = data.documents || [];
+        allDocs = allDocs.concat(docs);
+        if (docs.length < 25) break; // última página
+        page++;
+        if (page > 20) break; // segurança
       }
-      
-      const data = await resp.json();
-      const docs = data.documents || [];
-      
-      // Apenas documentos pendentes de assinatura
-      const pendentes = docs.filter(doc => doc.status === 'running');
+
+      // Log dos status encontrados para diagnóstico
+      const statusEncontrados = [...new Set(allDocs.map(d => d.status))];
+      console.log('Status encontrados:', statusEncontrados, 'Total docs:', allDocs.length);
+
+      // Filtra pendentes — tenta running e outros possíveis nomes
+      const pendentes = allDocs.filter(doc => 
+        doc.status === 'running' || 
+        doc.status === 'pending' || 
+        doc.status === 'waiting' ||
+        doc.status === 'open' ||
+        doc.status === 'sent'
+      );
       
       // Formata os dados relevantes
       const formatados = pendentes.map(doc => ({

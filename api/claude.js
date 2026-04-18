@@ -297,5 +297,41 @@ export default async function handler(req, res) {
     }
   }
 
+  
+  // ── Rota 4: Baixar PDF assinado da Clicksign ─────────────────────────────
+  if (action === 'clicksign_pdf') {
+    const token = process.env.CLICKSIGN_TOKEN;
+    if (!token) return res.status(500).json({ error: 'CLICKSIGN_TOKEN não configurado.' });
+
+    const { documentKey } = req.body;
+    if (!documentKey) return res.status(400).json({ error: 'documentKey é obrigatório.' });
+
+    try {
+      const BASE = 'https://app.clicksign.com/api/v1';
+      
+      // Busca os dados do documento para obter a URL do PDF
+      const resp = await fetch(`${BASE}/documents/${documentKey}?access_token=${token}`, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!resp.ok) {
+        const err = await resp.text();
+        return res.status(resp.status).json({ error: 'Erro ao buscar documento: ' + err });
+      }
+
+      const data = await resp.json();
+      const doc = data.document;
+
+      // Retorna a URL de download do PDF
+      return res.status(200).json({
+        filename: doc.filename,
+        download_url: `${BASE}/documents/${documentKey}/download?access_token=${token}`
+      });
+
+    } catch(e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
     return res.status(400).json({ error: 'Ação desconhecida.' });
 }

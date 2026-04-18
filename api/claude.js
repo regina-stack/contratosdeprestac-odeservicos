@@ -234,5 +234,48 @@ export default async function handler(req, res) {
     }
   }
 
-  return res.status(400).json({ error: 'Ação desconhecida.' });
+
+  // ── Rota 3: Buscar documentos pendentes da Clicksign ──────────────────────
+  if (action === 'clicksign_listar') {
+    const token = process.env.CLICKSIGN_TOKEN;
+    if (!token) return res.status(500).json({ error: 'CLICKSIGN_TOKEN não configurado.' });
+    
+    try {
+      const BASE = 'https://app.clicksign.com/api/v1';
+      
+      // Busca documentos com status running (pendentes)
+      const resp = await fetch(`${BASE}/documents?access_token=${token}&status=running`, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (!resp.ok) {
+        const err = await resp.text();
+        return res.status(resp.status).json({ error: 'Erro ao buscar documentos: ' + err });
+      }
+      
+      const data = await resp.json();
+      const docs = data.documents || [];
+      
+      // Formata os dados relevantes
+      const formatados = docs.map(doc => ({
+        key: doc.key,
+        filename: doc.filename,
+        status: doc.status,
+        created_at: doc.created_at,
+        deadline_at: doc.deadline_at,
+        signers: (doc.signers || []).map(s => ({
+          name: s.name,
+          email: s.email,
+          signed: s.signed_at ? true : false,
+          signed_at: s.signed_at
+        }))
+      }));
+      
+      return res.status(200).json({ documents: formatados });
+    } catch(e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
+    return res.status(400).json({ error: 'Ação desconhecida.' });
 }

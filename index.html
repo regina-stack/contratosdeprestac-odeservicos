@@ -108,6 +108,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .btn-cs-submit:hover{background:#5ef07a}
 .btn-cs-submit:disabled{opacity:.5;cursor:not-allowed}
 @media(max-width:520px){.uploads{grid-template-columns:1fr}.row2,.row3{grid-template-columns:1fr}.steps{flex-wrap:wrap}.stp{flex:1 1 45%}}
+
+.logout-btn{background:none;border:1px solid var(--border2);color:var(--text2);padding:8px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'Inter',sans-serif;margin-top:auto;width:100%;text-align:left;display:flex;align-items:center;gap:8px;transition:all .15s}
+.logout-btn:hover{border-color:#ef4444;color:#ef4444}
 </style>
 </head>
 <body>
@@ -663,6 +666,13 @@ ${d.flexAtivo ? c7flex : c7simples}
 <div class="sign-block"><div class="sign-line"></div>Testemunha 2 — CPF: ______________________</div>
 </div>
 </body></html>`;
+}
+
+async function fazerLogout() {
+  if (window._sb) {
+    await window._sb.auth.signOut();
+  }
+  window.location.href = '/login.html';
 }
 </script>
 </body>

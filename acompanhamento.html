@@ -273,6 +273,161 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 </div>
 
 <script>
+
+// ── Importar da Clicksign ─────────────────────────────────────────────────────
+let docsClicksign = [];
+
+async function abrirModalImport() {
+  document.getElementById('import-lista').innerHTML = '<div class="loading"><span class="spin"></span>Buscando documentos na Clicksign...</div>';
+  document.getElementById('btn-importar').style.display = 'none';
+  document.getElementById('msg-import').textContent = '';
+  document.getElementById('modal-import').classList.add('open');
+
+  try {
+    const resp = await fetch('/api/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'clicksign_listar' })
+    });
+    const data = await resp.json();
+    if (!resp.ok || data.error) throw new Error(data.error || 'Erro ao buscar');
+
+    docsClicksign = data.documents || [];
+
+    // Busca document_keys já importados no Supabase
+    const jaResp = await supaFetch('contratos?select=document_key&document_key=not.is.null');
+    const jaData = await jaResp.json();
+    const keysImportadas = new Set(jaData.map(c => c.document_key));
+
+    if (!docsClicksign.length) {
+      document.getElementById('import-lista').innerHTML = '<div class="empty">Nenhum contrato pendente encontrado na Clicksign.</div>';
+      return;
+    }
+
+    const REGINA = 'regina@digitalmaiscontabilidade.com';
+    const items = docsClicksign.map((doc, i) => {
+      const jaImportado = keysImportadas.has(doc.key);
+      const cliente = doc.signers?.find(s => s.email !== REGINA);
+      const dataCriacao = doc.created_at ? new Date(doc.created_at).toLocaleDateString('pt-BR') : '—';
+      const nomeArq = doc.filename?.replace('.pdf','').replace(/_/g,' ') || 'Sem nome';
+
+      return `<div class="import-item" id="item-${i}">
+        <input type="checkbox" class="import-check" id="check-${i}" ${jaImportado ? 'disabled' : 'checked'} onchange="toggleItem(${i})">
+        <div class="import-info">
+          <div class="import-name">${nomeArq}</div>
+          <div class="import-sub">
+            ${cliente ? `Cliente: ${cliente.name || cliente.email}` : 'Signatário não identificado'}
+            ${cliente?.email ? ` · ${cliente.email}` : ''}
+            · Enviado em ${dataCriacao}
+          </div>
+          ${jaImportado
+            ? '<span class="import-already">✓ Já importado</span>'
+            : '<span class="import-status">Pendente de assinatura</span>'}
+        </div>
+      </div>`;
+    }).join('');
+
+    const novos = docsClicksign.filter(d => !keysImportadas.has(d.key)).length;
+
+    document.getElementById('import-lista').innerHTML = `
+      <div class="select-all-row" onclick="toggleTodos()">
+        <input type="checkbox" id="check-all" checked style="accent-color:var(--green)">
+        <span>Selecionar todos os ${novos} novos</span>
+      </div>
+      ${items}`;
+
+    if (novos > 0) document.getElementById('btn-importar').style.display = 'block';
+
+  } catch(e) {
+    document.getElementById('import-lista').innerHTML = `<div class="empty">❌ ${e.message}</div>`;
+    console.error('Erro importar:', e);
+  }
+}
+
+function toggleItem(i) {
+  const el = document.getElementById('item-'+i);
+  const check = document.getElementById('check-'+i);
+  if(el) el.classList.toggle('selected', check.checked);
+}
+
+function toggleTodos() {
+  const checkAll = document.getElementById('check-all');
+  checkAll.checked = !checkAll.checked;
+  docsClicksign.forEach((doc, i) => {
+    const check = document.getElementById('check-'+i);
+    if (check && !check.disabled) {
+      check.checked = checkAll.checked;
+      toggleItem(i);
+    }
+  });
+}
+
+async function confirmarImport() {
+  const btn = document.getElementById('btn-importar');
+  const msg = document.getElementById('msg-import');
+  const REGINA = 'regina@digitalmaiscontabilidade.com';
+
+  const selecionados = docsClicksign.filter((doc, i) => {
+    const check = document.getElementById('check-'+i);
+    return check && check.checked && !check.disabled;
+  });
+
+  if (!selecionados.length) {
+    msg.textContent = '⚠ Selecione pelo menos um contrato.';
+    msg.style.color = 'var(--amber)';
+    return;
+  }
+
+  btn.disabled = true;
+  msg.textContent = `Importando ${selecionados.length} contrato(s)...`;
+  msg.style.color = 'var(--green)';
+
+  const hoje = new Date().toISOString().split('T')[0];
+  let importados = 0, erros = 0;
+
+  for (const doc of selecionados) {
+    try {
+      const cliente = doc.signers?.find(s => s.email !== REGINA);
+      const nomeArq = doc.filename?.replace('.pdf','').replace(/_/g,' ') || 'Contrato';
+      const dataEnvio = doc.created_at ? doc.created_at.split('T')[0] : hoje;
+
+      const resp = await supaFetch('contratos', {
+        method: 'POST',
+        body: JSON.stringify({
+          nome_cliente: cliente?.name || nomeArq,
+          email_cliente: cliente?.email || '',
+          data_envio: dataEnvio,
+          status: 'pendente',
+          document_key: doc.key
+        })
+      });
+
+      if (resp.ok) {
+        const [contrato] = await resp.json();
+        if (contrato?.id) {
+          await supaFetch('contatos', {
+            method: 'POST',
+            body: JSON.stringify({
+              contrato_id: contrato.id,
+              data_contato: dataEnvio,
+              resultado: 'sem-resposta',
+              canal: 'Sistema',
+              observacao: 'Contrato importado da Clicksign.',
+              feito_por: 'Sistema'
+            })
+          });
+        }
+        importados++;
+      } else erros++;
+    } catch(e) { erros++; console.error(e); }
+  }
+
+  msg.textContent = `✅ ${importados} importado(s)!${erros ? ` (${erros} erro(s))` : ''}`;
+  msg.style.color = 'var(--teal)';
+  btn.textContent = '✓ Concluído!';
+  setTimeout(() => { fecharModal('modal-import'); carregarContratos(); }, 1500);
+}
+
 const SUPA_URL = 'https://rkritsqmaiqyjdonsqqn.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrcml0c3FtYWlxeWpkb25zcXFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMTY1NzYsImV4cCI6MjA5MTg5MjU3Nn0.uej4YE67KOiL1UZsYaxO2ZD8BOyKL0qBPMrVoFKc-tI';
 

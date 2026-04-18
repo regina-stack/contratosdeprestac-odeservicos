@@ -504,8 +504,7 @@ function abrirPreview() {
     frame.src = '';
     const reader = new FileReader();
     reader.onload = e => {
-      frame.srcdoc = '<html><body style="margin:0;background:#fff;text-align:center"><img src="' + e.target.result + '" style="max-width:100%;height:auto">
-</body></html>';
+      frame.srcdoc = '<html><body style="margin:0;background:#fff;text-align:center"><img src="' + e.target.result + '" style="max-width:100%;height:auto"></body></html>';
     };
     reader.readAsDataURL(file);
   }

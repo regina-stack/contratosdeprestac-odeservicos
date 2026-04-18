@@ -4,6 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Digital+ | Acompanhamento</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  const sb = supabase.createClient("","");
+  sb.auth.getSession().then(({data:{session}})=>{
+    if(!session){ window.location.href="/login.html?redirect="+encodeURIComponent(window.location.pathname); }
+  });
+  window._sb = sb;
+  window._logout = async function(){ await sb.auth.signOut(); window.location.href="/login.html"; };
+})();
+</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700&family=Inter:wght@300;400;500&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}

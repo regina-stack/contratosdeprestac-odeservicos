@@ -124,6 +124,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .import-status{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(245,158,11,.1);color:var(--amber);margin-top:4px}
 .import-already{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(148,168,148,.1);color:var(--text2);margin-top:4px}
 .select-all-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:13px;color:var(--text2);cursor:pointer}
+
+.btn-pdf{padding:5px 10px;font-size:11px;font-weight:600;border-radius:6px;border:1px solid var(--teal);background:rgba(6,214,160,.08);color:var(--teal);cursor:pointer;font-family:'Exo 2',sans-serif;transition:all .15s;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.btn-pdf:hover{background:rgba(6,214,160,.2)}
+.btn-pdf:disabled{opacity:.5;cursor:not-allowed}
 </style>
 </head>
 <body>
@@ -757,8 +761,17 @@ async function baixarPDF(documentKey, nomeCliente) {
       body: JSON.stringify({ action: 'clicksign_pdf', documentKey })
     });
     const data = await resp.json();
-    if (!resp.ok || data.error) throw new Error(data.error || 'Erro');
-    window.open(data.download_url, '_blank');
+    if (!resp.ok || data.error) throw new Error(data.error || 'Erro ao baixar PDF');
+    const byteChars = atob(data.base64);
+    const byteArr = new Uint8Array(byteChars.length);
+    for (let i = 0; i < byteChars.length; i++) byteArr[i] = byteChars.charCodeAt(i);
+    const blob = new Blob([byteArr], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = data.filename || ('Contrato_' + (nomeCliente||'').replace(/[^a-zA-Z0-9]/g,'_') + '.pdf');
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
   } catch(e) { alert('Erro ao baixar PDF: ' + e.message); }
   finally { btn.disabled = false; btn.textContent = orig; }
 }

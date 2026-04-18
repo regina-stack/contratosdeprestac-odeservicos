@@ -472,45 +472,64 @@ async function toggleDrive(contratoId, salvoAtual, nomeCliente) {
 
 
 // ── WhatsApp mensagens ───────────────────────────────────────────────────────
-function abrirWhatsApp(contrato, tipo) {
+async function abrirWhatsApp(contrato, tipo) {
   const nome  = contrato.nome_cliente || '';
   const fone  = (contrato.whatsapp_cliente || '').replace(/\D/g, '');
-  
+
   if (!fone) {
     alert('Este contrato não tem WhatsApp cadastrado.');
     return;
   }
-  
-  const numero = fone.startsWith('55') ? fone : '55' + fone;
+
+  const numero   = fone.startsWith('55') ? fone : '55' + fone;
   const diasPend = diasPendente(contrato.data_envio);
-  
+
+  // Busca o link de assinatura — tenta salvo no banco, senão busca na Clicksign
+  let linkAssinatura = contrato.clicksign_url || '';
+
+  if (!linkAssinatura && contrato.document_key) {
+    try {
+      const resp = await fetch('/api/claude', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'clicksign_link', documentKey: contrato.document_key })
+      });
+      const data = await resp.json();
+      if (data.signUrl) {
+        linkAssinatura = data.signUrl;
+        // Salva no banco para próxima vez
+        await supaFetch(`contratos?id=eq.${contrato.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ clicksign_url: linkAssinatura })
+        });
+      }
+    } catch(e) { console.error('Erro ao buscar link:', e); }
+  }
+
+  const linkTxt = linkAssinatura
+    ? '\n\n🔗 *Clique aqui para assinar:*\n' + linkAssinatura
+    : '';
+
   let msg = '';
-  
+
   if (tipo === 'envio') {
-    // Mensagem de envio do contrato
     msg = encodeURIComponent(
       `Olá ${nome}! 😊\n\n` +
-      `Seu contrato de prestação de serviços com a *Digital+ Contabilidade* foi enviado hoje para assinatura eletrônica.\n\n` +
-      `📧 *Verifique seu e-mail* — você receberá um link para assinar o documento de forma rápida e segura.\n\n` +
-      `Caso não encontre o e-mail, verifique a caixa de spam ou entre em contato conosco.\n\n` +
-      `Qualquer dúvida estamos à disposição! 🙏\n\n` +
+      `Seu contrato de prestação de serviços com a *Digital+ Contabilidade* foi enviado hoje para assinatura eletrônica.` +
+      linkTxt +
+      `\n\nQualquer dúvida estamos à disposição! 🙏\n\n` +
       `*Digital+ Web Contabilidade*`
     );
   } else {
-    // Mensagem de cadência (lembrete) — inclui link se disponível
-    const linkLembrete = contrato.clicksign_url 
-      ? '\n\n🔗 *Link para assinar:*\n' + contrato.clicksign_url 
-      : '\n\n📧 O link foi enviado para o seu e-mail. Caso não encontre, verifique a caixa de spam.';
     msg = encodeURIComponent(
       `Olá ${nome}! 😊\n\n` +
-      `Passando para lembrar que seu contrato com a *Digital+ Contabilidade* está aguardando sua assinatura há *${diasPend} dia(s)*. ` +
-      `Por favor, assine assim que possível! 🙏` +
-      linkLembrete +
-      `\n\nQualquer dúvida estamos à disposição!\n\n` +
+      `Passando para lembrar que seu contrato com a *Digital+ Contabilidade* está aguardando sua assinatura há *${diasPend} dia(s)*.` +
+      linkTxt +
+      `\n\nQualquer dúvida estamos à disposição! 🙏\n\n` +
       `*Digital+ Web Contabilidade*`
     );
   }
-  
+
   window.open('https://wa.me/' + numero + '?text=' + msg, '_blank');
 }
 

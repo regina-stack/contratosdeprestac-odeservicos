@@ -55,6 +55,41 @@ export default async function handler(req, res) {
       }
     }
 
+    // Evento: signatário recusou assinar
+    if (eventName === 'refusal') {
+      const signerName  = event?.event?.data?.name  || 'Signatário';
+      const signerEmail = event?.event?.data?.email || '';
+      const motivo      = event?.event?.data?.reason || 'Motivo não informado';
+
+      const getResp = await fetch(`${SUPA_URL}/rest/v1/contratos?document_key=eq.${docKey}&select=id`, {
+        headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
+      });
+      const contratos = await getResp.json();
+
+      if (contratos?.length > 0) {
+        const hoje = new Date().toISOString().split('T')[0];
+        // Marca como recusado no Supabase
+        await fetch(`${SUPA_URL}/rest/v1/contratos?document_key=eq.${docKey}`, {
+          method: 'PATCH',
+          headers: supaHeaders,
+          body: JSON.stringify({ status: 'recusado' })
+        });
+        // Registra no histórico
+        await fetch(`${SUPA_URL}/rest/v1/contatos`, {
+          method: 'POST',
+          headers: supaHeaders,
+          body: JSON.stringify({
+            contrato_id: contratos[0].id,
+            data_contato: hoje,
+            resultado: 'recusou',
+            canal: 'Clicksign',
+            observacao: `${signerName} (${signerEmail}) recusou assinar. Motivo: ${motivo}`,
+            feito_por: 'Sistema'
+          })
+        });
+      }
+    }
+
     // Evento: signatário assinou (assinatura parcial)
     if (eventName === 'sign') {
       const signerName  = event?.event?.data?.name  || 'Signatário';

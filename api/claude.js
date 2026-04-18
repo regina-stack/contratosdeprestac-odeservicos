@@ -323,9 +323,55 @@ export default async function handler(req, res) {
       const doc = data.document;
 
       // Retorna a URL de download do PDF
+      // URL de download direto da Clicksign
+      const downloadUrl = `https://app.clicksign.com/api/v1/documents/${documentKey}/download?access_token=${token}`;
+      
+      // Faz o download no servidor e retorna como base64
+      const dlResp = await fetch(downloadUrl);
+      if (!dlResp.ok) {
+        return res.status(404).json({ error: 'PDF não disponível. Verifique se o documento está finalizado.' });
+      }
+      
+      const buffer = await dlResp.arrayBuffer();
+      const base64 = Buffer.from(buffer).toString('base64');
+      const filename = doc.filename || `Contrato_${documentKey}.pdf`;
+      
+      return res.status(200).json({ filename, base64 });
+
+    } catch(e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
+  
+  // ── Rota 4: Baixar PDF assinado da Clicksign ─────────────────────────────
+  if (action === 'clicksign_pdf') {
+    const token = process.env.CLICKSIGN_TOKEN;
+    if (!token) return res.status(500).json({ error: 'CLICKSIGN_TOKEN não configurado.' });
+
+    const { documentKey } = req.body;
+    if (!documentKey) return res.status(400).json({ error: 'documentKey obrigatório.' });
+
+    try {
+      const BASE = 'https://app.clicksign.com/api/v1';
+      
+      // Busca o documento para pegar a URL do PDF
+      const resp = await fetch(`${BASE}/documents/${documentKey}?access_token=${token}`, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!resp.ok) {
+        const err = await resp.text();
+        return res.status(resp.status).json({ error: 'Erro ao buscar documento: ' + err });
+      }
+
+      const data = await resp.json();
+      const doc = data.document;
+
+      // Retorna a URL do PDF final
       return res.status(200).json({
         filename: doc.filename,
-        download_url: `${BASE}/documents/${documentKey}/download?access_token=${token}`
+        url: `https://app.clicksign.com/api/v1/documents/${documentKey}/download?access_token=${token}`
       });
 
     } catch(e) {

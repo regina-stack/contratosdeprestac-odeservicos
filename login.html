@@ -55,7 +55,7 @@ const sb = createClient('https://rkritsqmaiqyjdonsqqn.supabase.co', 'eyJhbGciOiJ
 
 // Se já estiver logado, redireciona
 sb.auth.getSession().then(({ data: { session } }) => {
-  if (session) window.location.href = '/index.html';
+  if (session) window.location.href = '/acompanhamento.html';
 });
 
 async function fazerLogin() {
@@ -78,7 +78,7 @@ async function fazerLogin() {
   }
 
   // Redireciona para onde veio ou para a home
-  const redirect = new URLSearchParams(window.location.search).get('redirect') || '/index.html';
+  const redirect = new URLSearchParams(window.location.search).get('redirect') || '/acompanhamento.html';
   window.location.href = redirect;
 }
 

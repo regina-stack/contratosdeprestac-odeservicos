@@ -319,7 +319,7 @@ async function abrirModalImport() {
             ${cliente ? `Cliente: ${cliente.name || cliente.email}` : 'Signatário não identificado'}
             ${cliente?.email ? ` · ${cliente.email}` : ''}
             · Enviado em ${dataCriacao}
-            · Status: <strong style="color:var(--green)">${doc.status || 'desconhecido'}</strong>
+
           </div>
           ${jaImportado
             ? '<span class="import-already">✓ Já importado</span>'

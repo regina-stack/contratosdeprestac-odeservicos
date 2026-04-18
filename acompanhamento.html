@@ -134,6 +134,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .badge-drive-nok{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(239,68,68,.12);color:#f87171;cursor:pointer;border:1px solid rgba(239,68,68,.3);animation:pulse-red 2s infinite;transition:all .15s}
 .badge-drive-nok:hover{background:rgba(239,68,68,.2)}
 @keyframes pulse-red{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.3)}50%{box-shadow:0 0 0 4px rgba(239,68,68,.0)}}
+
+.badge-expirado{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3)}
+.badge-expirado-row{background:rgba(239,68,68,.03) !important;border-left:3px solid #ef4444}
 </style>
 </head>
 <body>
@@ -166,6 +169,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <div class="stat"><div class="stat-label">Contato hoje</div><div class="stat-value red" id="stat-hoje">—</div></div>
       <div class="stat"><div class="stat-label">Próx. 3 dias</div><div class="stat-value teal" id="stat-prox">—</div></div>
       <div class="stat"><div class="stat-label">Críticos +20 dias</div><div class="stat-value red" id="stat-critico">—</div></div>
+      <div class="stat"><div class="stat-label">Expirados</div><div class="stat-value red" id="stat-expirado">—</div></div>
     </div>
 
     <div class="filters">
@@ -176,6 +180,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <button class="filter-btn" onclick="filtrar('novo',this)">Novos até 7 dias</button>
       <button class="filter-btn" onclick="filtrar('assinados',this)">Assinados ✅</button>
       <button class="filter-btn" onclick="filtrar('drive_pendente',this)">⚠ Falta salvar no Drive</button>
+      <button class="filter-btn" onclick="filtrar('expirados',this)">⏰ Expirados</button>
     </div>
 
     <div class="table-wrap">
@@ -539,6 +544,7 @@ async function carregarContratos() {
       ...c,
       historico: (c.contatos || []).sort((a,b) => a.data_contato.localeCompare(b.data_contato))
     }));
+    await verificarExpirados(todosContratos);
     renderizar();
   } catch(e) {
     document.getElementById('lista-contratos').innerHTML = `<div class="empty">Erro ao carregar dados.<br>${e.message}</div>`;
@@ -563,6 +569,9 @@ function renderizar() {
   document.getElementById('stat-hoje').textContent    = ativos.filter(c => { const p = calcularProximo(c.data_envio, c.historico.map(h=>h.data_contato)); return p && (isHoje(p) || isPassado(p)); }).length;
   document.getElementById('stat-prox').textContent    = ativos.filter(c => { const p = calcularProximo(c.data_envio, c.historico.map(h=>h.data_contato)); return p && isProx3(p); }).length;
   document.getElementById('stat-critico').textContent = ativos.filter(c => diasPendente(c.data_envio) > 20).length;
+  const expiradosCount = todosContratos.filter(c => c.status === 'expirado').length;
+  const statExp = document.getElementById('stat-expirado');
+  if (statExp) statExp.textContent = expiradosCount;
 
   // Filtro
   let lista = [...todosContratos];
@@ -570,8 +579,10 @@ function renderizar() {
     lista = lista.filter(c => c.status === 'assinou');
   } else if (filtroAtual === 'drive_pendente') {
     lista = lista.filter(c => c.status === 'assinou' && !c.salvo_drive);
+  } else if (filtroAtual === 'expirados') {
+    lista = lista.filter(c => c.status === 'expirado');
   } else {
-    lista = lista.filter(c => c.status === 'pendente');
+    lista = lista.filter(c => c.status === 'pendente' || c.status === 'expirado');
     if (filtroAtual === 'hoje')   lista = lista.filter(c => { const p = calcularProximo(c.data_envio, c.historico.map(h=>h.data_contato)); return p && (isHoje(p)||isPassado(p)); });
     if (filtroAtual === 'semana') lista = lista.filter(c => { const p = calcularProximo(c.data_envio, c.historico.map(h=>h.data_contato)); if(!p)return false; const d7=new Date();d7.setDate(d7.getDate()+7);return p>=hoje&&p<=d7.toISOString().split('T')[0]; });
     if (filtroAtual === 'critico') lista = lista.filter(c => diasPendente(c.data_envio) > 20);
@@ -601,7 +612,9 @@ function renderizar() {
     const ultimo   = c.historico.length ? c.historico[c.historico.length-1] : null;
     const diasClass= c.status==='assinou' ? '' : dias<=7 ? 'ok' : dias<=20 ? 'warn' : 'danger';
 
-    const proxTxt = c.status==='assinou'
+    const proxTxt = c.status==='expirado'
+      ? '<span class="badge-expirado">⏰ Expirado</span>'
+      : c.status==='assinou'
       ? '<span class="badge-assinado">✅ Assinado</span>'
       : !prox
         ? '<span style="color:var(--text2);font-size:12px">Cadência encerrada</span>'
@@ -618,7 +631,11 @@ function renderizar() {
         : `<button class="badge-drive-nok" onclick="toggleDrive('${c.id}', false, '${c.nome_cliente}')" title="Clique para marcar como salvo no Drive">⚠ Drive</button>`
     ) : '';
 
-    const acoes = c.status === 'assinou'
+    const acoes = c.status === 'expirado'
+      ? `<button class="btn-sm primary" id="btn-reenviar-${c.id}" onclick="reenviarContrato('${c.id}')">↺ Reenviar</button>
+         <button class="btn-sm" onclick="abrirModalHist('${c.id}')">📋</button>
+         <button class="btn-sm danger" onclick="encerrar('${c.id}')">✕</button>`
+      : c.status === 'assinou'
       ? `${driveBadge}
          ${c.document_key 
           ? `<button class="btn-sm primary" onclick="baixarPDF('${c.document_key}', '${c.nome_cliente}')" title="Baixar PDF assinado">⬇ PDF</button>` 

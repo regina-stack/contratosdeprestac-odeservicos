@@ -439,6 +439,31 @@ function setupUpload(inputId, zoneId, nameId, key) {
   const input = document.getElementById(inputId);
   const zone  = document.getElementById(zoneId);
   const nameEl = document.getElementById(nameId);
+
+  // Clique na zone abre o seletor de arquivo
+  zone.addEventListener('click', function() {
+    input.click();
+  });
+
+  // Drag & drop
+  zone.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    zone.style.borderColor = 'var(--green)';
+  });
+  zone.addEventListener('dragleave', function() {
+    zone.style.borderColor = '';
+  });
+  zone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    zone.style.borderColor = '';
+    const f = e.dataTransfer.files[0];
+    if (!f) return;
+    uploadedFiles[key] = f;
+    zone.classList.add('ok');
+    nameEl.textContent = '✓ ' + f.name;
+    checkFiles();
+  });
+
   input.addEventListener('change', function(e) {
     e.stopPropagation();
     const f = this.files[0];

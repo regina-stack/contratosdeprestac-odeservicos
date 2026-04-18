@@ -318,7 +318,9 @@ export default async function handler(req, res) {
 
       const data = await resp.json();
       const doc = data.document;
-      const pdfUrl = doc?.downloads?.original_file_url;
+      // signed_file_url = PDF final com todas as assinaturas
+      // original_file_url = PDF original sem assinaturas
+      const pdfUrl = doc?.downloads?.signed_file_url || doc?.downloads?.original_file_url;
 
       if (!pdfUrl) {
         return res.status(404).json({ error: 'PDF não disponível. O documento pode ainda não estar finalizado.' });

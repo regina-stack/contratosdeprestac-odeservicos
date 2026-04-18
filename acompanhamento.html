@@ -177,6 +177,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
     <div class="filters">
       <button class="filter-btn active" onclick="filtrar('todos',this)">Todos</button>
+      <button class="filter-btn" onclick="filtrar('pendentes',this)" style="border-color:var(--amber);color:var(--amber)">⏳ Pendentes</button>
       <button class="filter-btn" onclick="filtrar('hoje',this)">Contato hoje</button>
       <button class="filter-btn" onclick="filtrar('semana',this)">Esta semana</button>
       <button class="filter-btn" onclick="filtrar('critico',this)">Críticos +20 dias</button>
@@ -583,6 +584,77 @@ let filtroAtual    = 'todos';
 let contratoSel    = null;
 
 // ── Carregar do Supabase ──────────────────────────────────────────────────────
+
+// ── Verificar contratos expirados ─────────────────────────────────────────────
+async function verificarExpirados(contratos) {
+  const hoje = new Date().toISOString().split('T')[0];
+  const expirados = contratos.filter(c =>
+    c.status === 'pendente' &&
+    c.data_envio &&
+    diasPendente(c.data_envio) > 30
+  );
+  for (const c of expirados) {
+    await supaFetch(`contratos?id=eq.${c.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: 'expirado' })
+    });
+  }
+  if (expirados.length > 0) carregarContratos();
+}
+
+// ── Reenviar contrato expirado ────────────────────────────────────────────────
+async function reenviarContrato(contratoId) {
+  const c = todosContratos.find(x => x.id === contratoId);
+  if (!c) return;
+  if (!confirm(`Reenviar contrato para ${c.nome_cliente}?\nUm novo contrato será criado e o atual será encerrado.`)) return;
+
+  const btn = document.getElementById('btn-reenviar-' + contratoId);
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+
+  try {
+    await supaFetch(`contratos?id=eq.${contratoId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: 'encerrado' })
+    });
+
+    const hoje = new Date().toISOString().split('T')[0];
+    const resp = await supaFetch('contratos', {
+      method: 'POST',
+      body: JSON.stringify({
+        nome_cliente: c.nome_cliente,
+        email_cliente: c.email_cliente,
+        whatsapp_cliente: c.whatsapp_cliente,
+        razao_social: c.razao_social,
+        data_envio: hoje,
+        status: 'pendente',
+        data_expiracao: new Date(Date.now() + 30*86400000).toISOString().split('T')[0]
+      })
+    });
+
+    if (resp.ok) {
+      const [novo] = await resp.json();
+      if (novo?.id) {
+        await supaFetch('contatos', {
+          method: 'POST',
+          body: JSON.stringify({
+            contrato_id: novo.id,
+            data_contato: hoje,
+            resultado: 'sem-resposta',
+            canal: 'Sistema',
+            observacao: `Contrato reenviado após expiração.`,
+            feito_por: 'Sistema'
+          })
+        });
+      }
+      alert(`✅ Novo contrato criado para ${c.nome_cliente}!`);
+      carregarContratos();
+    }
+  } catch(e) {
+    alert('Erro ao reenviar: ' + e.message);
+    if (btn) { btn.disabled = false; btn.textContent = '↺ Reenviar'; }
+  }
+}
+
 async function carregarContratos() {
   try {
     const resp = await supaFetch('contratos?select=*,contatos(*)&order=created_at.desc', { prefer: 'return=representation' });
@@ -613,6 +685,8 @@ function renderizar() {
 
   // Stats
   document.getElementById('stat-total').textContent   = ativos.length;
+  // Stat de pendentes puro (sem expirados)
+  const somentePendentes = todosContratos.filter(c => c.status === 'pendente');
   document.getElementById('stat-hoje').textContent    = ativos.filter(c => { const p = calcularProximo(c.data_envio, c.historico.map(h=>h.data_contato)); return p && (isHoje(p) || isPassado(p)); }).length;
   document.getElementById('stat-prox').textContent    = ativos.filter(c => { const p = calcularProximo(c.data_envio, c.historico.map(h=>h.data_contato)); return p && isProx3(p); }).length;
   document.getElementById('stat-critico').textContent = ativos.filter(c => diasPendente(c.data_envio) > 20).length;
@@ -622,7 +696,9 @@ function renderizar() {
 
   // Filtro
   let lista = [...todosContratos];
-  if (filtroAtual === 'assinados') {
+  if (filtroAtual === 'pendentes') {
+    lista = lista.filter(c => c.status === 'pendente');
+  } else if (filtroAtual === 'assinados') {
     lista = lista.filter(c => c.status === 'assinou');
   } else if (filtroAtual === 'drive_pendente') {
     lista = lista.filter(c => c.status === 'assinou' && !c.salvo_drive);

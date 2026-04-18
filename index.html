@@ -742,28 +742,34 @@ function buildContractHTML(d) {
   const valor = isFixo ? honData.valor : 
     ((d.regime==='Simples Nacional'||d.regime==='MEI') ? planoAt?.sn : planoAt?.lp);
 
-  const tabelaHTML = isFixo ? '' : `
-<table style="width:100%;border-collapse:collapse;margin:1em 0;font-size:9pt">
-<thead><tr style="background:#e8f5e9">
-  <th style="border:1px solid #aaa;padding:6px 8px;text-align:left;width:10%">Plano</th>
-  <th style="border:1px solid #aaa;padding:6px 8px;text-align:left;width:16%">Faturamento</th>
-  <th style="border:1px solid #aaa;padding:6px 8px;text-align:center;width:12%">Simples Nacional</th>
-  <th style="border:1px solid #aaa;padding:6px 8px;text-align:center;width:12%">Lucro Presumido</th>
-  <th style="border:1px solid #aaa;padding:6px 8px;text-align:left">Entregas Incluídas</th>
-</tr></thead><tbody>
-\${honData.plans.map(p => {
-  const dest = p.nome===d.plano ? 'background:#f0faf2;font-weight:bold' : '';
-  const entregas = (p.ent||'').split('\n').filter(e=>e.trim());
-  return \`<tr style="\${dest}">
-    <td style="border:1px solid #aaa;padding:6px 8px;font-weight:bold;vertical-align:top">\${p.nome}</td>
-    <td style="border:1px solid #aaa;padding:6px 8px;vertical-align:top">\${p.fat}</td>
-    <td style="border:1px solid #aaa;padding:6px 8px;text-align:center;vertical-align:top">\${p.sn}</td>
-    <td style="border:1px solid #aaa;padding:6px 8px;text-align:center;vertical-align:top">\${p.lp}</td>
-    <td style="border:1px solid #aaa;padding:6px 8px;vertical-align:top;font-size:8.5pt;line-height:1.6">\${entregas.map(e=>'- '+e).join('<br>')}</td>
-  </tr>\`;}).join('')}
-</tbody></table>\`;
+  // Gera tabela de planos como string (evita template literals aninhadas)
+  function buildPlanosTable(planos, planoAtivo) {
+    const th = (w, txt) => '<th style="border:1px solid #aaa;padding:6px 8px;text-align:left;'+w+'">'+txt+'</th>';
+    const td = (extra, txt) => '<td style="border:1px solid #aaa;padding:6px 8px;vertical-align:top;'+extra+'">'+txt+'</td>';
+    let rows = '';
+    planos.forEach(function(p) {
+      const dest = p.nome === planoAtivo ? 'background:#f0faf2;font-weight:bold' : '';
+      const entregas = (p.ent||'').split('\n').filter(function(e){return e.trim();});
+      rows += '<tr style="'+dest+'">'
+        + td('font-weight:bold;', p.nome)
+        + td('', p.fat)
+        + td('text-align:center;', p.sn)
+        + td('text-align:center;', p.lp)
+        + td('font-size:8.5pt;line-height:1.6;', entregas.map(function(e){return '- '+e;}).join('<br>'))
+        + '</tr>';
+    });
+    return '<table style="width:100%;border-collapse:collapse;margin:1em 0;font-size:9pt">'
+      + '<thead><tr style="background:#e8f5e9">'
+      + th('width:10%','Plano') + th('width:16%','Faturamento')
+      + th('width:12%;text-align:center','Simples Nacional') + th('width:12%;text-align:center','Lucro Presumido')
+      + th('','Entregas Incluídas')
+      + '</tr></thead><tbody>' + rows + '</tbody></table>';
+  }
 
-const c7fixo = `<p><strong>CLÁUSULA SÉTIMA.</strong> O valor mensal dos honorários contábeis referente ao serviço de <strong>${honData.nome||'Acompanhamento mensal'}</strong> é de <strong>${honData.valor}</strong>.</p>`;
+  const tabelaHTML = isFixo ? '' : buildPlanosTable(honData.plans, d.plano);
+
+const nomeServico = honData.nome || 'Acompanhamento mensal';
+  const c7fixo = '<p><strong>CLÁUSULA SÉTIMA.</strong> O valor mensal dos honorários contábeis referente ao serviço de <strong>' + nomeServico + '</strong> é de <strong>' + honData.valor + '</strong>.</p>';
 
   const c7flex = isFixo ? c7fixo : `<p><strong>CLÁUSULA SÉTIMA.</strong> O valor mensal deste contrato será ajustado de acordo com o faturamento mensal da CONTRATANTE, conforme as faixas a seguir:</p>
 ${tabelaHTML}

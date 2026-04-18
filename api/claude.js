@@ -308,12 +308,9 @@ export default async function handler(req, res) {
 
     try {
       const BASE = 'https://app.clicksign.com/api/v1';
-      
-      // Busca os dados do documento para obter a URL do PDF
-      const resp = await fetch(`${BASE}/documents/${documentKey}?access_token=${token}`, {
-        headers: { 'Content-Type': 'application/json' }
-      });
 
+      // Busca os dados do documento — a URL do PDF vem em downloads.original_file_url
+      const resp = await fetch(`${BASE}/documents/${documentKey}?access_token=${token}`);
       if (!resp.ok) {
         const err = await resp.text();
         return res.status(resp.status).json({ error: 'Erro ao buscar documento: ' + err });
@@ -321,29 +318,31 @@ export default async function handler(req, res) {
 
       const data = await resp.json();
       const doc = data.document;
+      const pdfUrl = doc?.downloads?.original_file_url;
 
-      // Retorna a URL de download do PDF
-      // URL de download direto da Clicksign
-      const downloadUrl = `https://app.clicksign.com/api/v1/documents/${documentKey}/download?access_token=${token}`;
-      
-      // Faz o download no servidor e retorna como base64
-      const dlResp = await fetch(downloadUrl);
-      if (!dlResp.ok) {
-        return res.status(404).json({ error: 'PDF não disponível. Verifique se o documento está finalizado.' });
+      if (!pdfUrl) {
+        return res.status(404).json({ error: 'PDF não disponível. O documento pode ainda não estar finalizado.' });
       }
-      
-      const buffer = await dlResp.arrayBuffer();
+
+      // Baixa o PDF da URL do S3 da Clicksign
+      const pdfResp = await fetch(pdfUrl);
+      if (!pdfResp.ok) {
+        return res.status(404).json({ error: 'Erro ao baixar o arquivo PDF.' });
+      }
+
+      const buffer = await pdfResp.arrayBuffer();
       const base64 = Buffer.from(buffer).toString('base64');
-      const filename = doc.filename || `Contrato_${documentKey}.pdf`;
-      
-      return res.status(200).json({ filename, base64 });
+
+      return res.status(200).json({
+        filename: doc.filename || `Contrato_${documentKey}.pdf`,
+        base64
+      });
 
     } catch(e) {
       return res.status(500).json({ error: e.message });
     }
   }
 
-  
   // ── Rota 4: Baixar PDF assinado da Clicksign ─────────────────────────────
   if (action === 'clicksign_pdf') {
     const token = process.env.CLICKSIGN_TOKEN;

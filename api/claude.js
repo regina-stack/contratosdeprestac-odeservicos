@@ -385,5 +385,31 @@ export default async function handler(req, res) {
     }
   }
 
+  
+  // ── Rota 5: Buscar link de assinatura do cliente ──────────────────────────
+  if (action === 'clicksign_link') {
+    const token = process.env.CLICKSIGN_TOKEN;
+    const { documentKey } = req.body;
+    if (!token || !documentKey) return res.status(400).json({ error: 'Parâmetros inválidos.' });
+
+    try {
+      const BASE = 'https://app.clicksign.com/api/v1';
+      const resp = await fetch(`${BASE}/documents/${documentKey}?access_token=${token}`);
+      if (!resp.ok) return res.status(404).json({ error: 'Documento não encontrado.' });
+
+      const data = await resp.json();
+      const signers = data.document?.signers || [];
+      
+      // Pega o link do primeiro signatário que NÃO é a Regina
+      const REGINA = 'regina@digitalmaiscontabilidade.com';
+      const cliente = signers.find(s => s.email !== REGINA);
+      const signUrl = cliente?.url || null;
+
+      return res.status(200).json({ signUrl });
+    } catch(e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
     return res.status(400).json({ error: 'Ação desconhecida.' });
 }

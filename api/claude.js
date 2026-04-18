@@ -197,7 +197,8 @@ export default async function handler(req, res) {
             whatsapp_cliente: whatsappCliente,
             data_envio: hoje,
             status: 'pendente',
-            document_key: documentKey
+            document_key: documentKey,
+            clicksign_url: `https://app.clicksign.com/sign/${requestSignatureKeyCliente}`
           })
         });
         if (supaResp.ok) {
@@ -223,9 +224,13 @@ export default async function handler(req, res) {
         console.error('Supabase erro:', supaErr.message);
       }
 
+      // Link de assinatura do cliente
+      const signUrl = `https://app.clicksign.com/sign/${requestSignatureKeyCliente}`;
+
       return res.status(200).json({
         success: true,
         documentKey,
+        signUrl,
         message: `Contrato enviado com sucesso! ${nomeCliente} receberá por e-mail${whatsappCliente ? ' e WhatsApp' : ''}. Regina também foi notificada.`
       });
 

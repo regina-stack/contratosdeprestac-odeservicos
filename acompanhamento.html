@@ -162,6 +162,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         <div class="page-sub">Contratos pendentes de assinatura — atualização em tempo real</div>
       </div>
       <div style="display:flex;gap:8px">
+        <button class="btn-import" onclick="exportarRelatorio()" style="border-color:var(--teal);color:var(--teal)">📊 Exportar CSV</button>
         <button class="btn-import" onclick="abrirModalImport()">⬇ Importar da Clicksign</button>
         <button class="btn-add" onclick="abrirModalNovo()">+ Adicionar contrato</button>
       </div>
@@ -185,6 +186,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <button class="filter-btn" onclick="filtrar('assinados',this)">Assinados ✅</button>
       <button class="filter-btn" onclick="filtrar('drive_pendente',this)">⚠ Falta salvar no Drive</button>
       <button class="filter-btn" onclick="filtrar('expirados',this)">⏰ Expirados</button>
+      <button class="filter-btn" onclick="filtrar('encerrados',this)">📁 Encerrados</button>
     </div>
 
     <div class="table-wrap">
@@ -533,6 +535,18 @@ async function abrirWhatsApp(contrato, tipo) {
   window.open('https://wa.me/' + numero + '?text=' + msg, '_blank');
 }
 
+// Nome da atendente logada (preenchido automaticamente)
+let nomeAtendente = '';
+(async function() {
+  try {
+    const { data: { session } } = await window._sb.auth.getSession();
+    if (session?.user?.email) {
+      // Usa o nome do metadata ou o e-mail
+      nomeAtendente = session.user.user_metadata?.name || session.user.email.split('@')[0];
+    }
+  } catch(e) {}
+})();
+
 const SUPA_URL = 'https://rkritsqmaiqyjdonsqqn.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrcml0c3FtYWlxeWpkb25zcXFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMTY1NzYsImV4cCI6MjA5MTg5MjU3Nn0.uej4YE67KOiL1UZsYaxO2ZD8BOyKL0qBPMrVoFKc-tI';
 
@@ -625,33 +639,36 @@ async function verificarExpirados(contratos) {
 async function reenviarContrato(contratoId) {
   const c = todosContratos.find(x => x.id === contratoId);
   if (!c) return;
-  if (!confirm(`Reenviar contrato para ${c.nome_cliente}?\nUm novo contrato será criado e o atual será encerrado.`)) return;
+
+  if (!confirm(`↺ Reenviar contrato para ${c.nome_cliente}?\n\nIsso irá:\n• Encerrar o contrato expirado\n• Criar novo contrato no painel\n• Reenviar notificação via Clicksign (se disponível)\n\nDeseja continuar?`)) return;
 
   const btn = document.getElementById('btn-reenviar-' + contratoId);
-  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Reenviando...'; }
 
   try {
+    // 1. Encerra o contrato expirado
     await supaFetch(`contratos?id=eq.${contratoId}`, {
       method: 'PATCH',
       body: JSON.stringify({ status: 'encerrado' })
     });
 
+    // 2. Cria novo contrato no Supabase
     const hoje = new Date().toISOString().split('T')[0];
-    const resp = await supaFetch('contratos', {
+    const novoResp = await supaFetch('contratos', {
       method: 'POST',
       body: JSON.stringify({
-        nome_cliente: c.nome_cliente,
-        email_cliente: c.email_cliente,
+        nome_cliente:     c.nome_cliente,
+        email_cliente:    c.email_cliente,
         whatsapp_cliente: c.whatsapp_cliente,
-        razao_social: c.razao_social,
-        data_envio: hoje,
-        status: 'pendente',
-        data_expiracao: new Date(Date.now() + 30*86400000).toISOString().split('T')[0]
+        razao_social:     c.razao_social,
+        data_envio:       hoje,
+        status:           'pendente',
+        document_key:     c.document_key || null
       })
     });
 
-    if (resp.ok) {
-      const [novo] = await resp.json();
+    if (novoResp.ok) {
+      const [novo] = await novoResp.json();
       if (novo?.id) {
         await supaFetch('contatos', {
           method: 'POST',
@@ -660,18 +677,124 @@ async function reenviarContrato(contratoId) {
             data_contato: hoje,
             resultado: 'sem-resposta',
             canal: 'Sistema',
-            observacao: `Contrato reenviado após expiração.`,
+            observacao: 'Contrato reenviado após expiração.',
             feito_por: 'Sistema'
           })
         });
       }
-      alert(`✅ Novo contrato criado para ${c.nome_cliente}!`);
+
+      // 3. Reenviar notificação via Clicksign se tiver document_key
+      let msgExtra = '';
+      if (c.document_key) {
+        try {
+          const csResp = await fetch('/api/claude', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'clicksign_reenviar', documentKey: c.document_key })
+          });
+          const csData = await csResp.json();
+          msgExtra = csData.success
+            ? '\n✉️ Notificação reenviada via Clicksign!'
+            : '\n⚠️ Novo contrato criado, mas não foi possível reenviar via Clicksign.';
+        } catch(e) {
+          msgExtra = '\n⚠️ Novo contrato criado no painel.';
+        }
+      }
+
+      alert(`✅ Contrato reenviado para ${c.nome_cliente}!${msgExtra}`);
       carregarContratos();
     }
   } catch(e) {
     alert('Erro ao reenviar: ' + e.message);
     if (btn) { btn.disabled = false; btn.textContent = '↺ Reenviar'; }
   }
+}
+
+
+// ── Editar contrato ───────────────────────────────────────────────────────────
+function abrirModalEditar(id) {
+  const c = todosContratos.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('edit-id').value    = id;
+  document.getElementById('edit-nome').value  = c.nome_cliente || '';
+  document.getElementById('edit-email').value = c.email_cliente || '';
+  document.getElementById('edit-whats').value = c.whatsapp_cliente || '';
+  document.getElementById('edit-razao').value = c.razao_social || '';
+  document.getElementById('edit-envio').value = c.data_envio || '';
+  document.getElementById('msg-editar').textContent = '';
+  document.getElementById('btn-salvar-editar').disabled = false;
+  document.getElementById('btn-salvar-editar').textContent = '💾 Salvar alterações';
+  document.getElementById('modal-editar').classList.add('open');
+}
+
+async function salvarEdicao() {
+  const id    = document.getElementById('edit-id').value;
+  const nome  = document.getElementById('edit-nome').value.trim();
+  const email = document.getElementById('edit-email').value.trim();
+  const whats = document.getElementById('edit-whats').value.trim();
+  const razao = document.getElementById('edit-razao').value.trim();
+  const envio = document.getElementById('edit-envio').value;
+  const msg   = document.getElementById('msg-editar');
+  const btn   = document.getElementById('btn-salvar-editar');
+
+  if (!nome) { msg.textContent = '⚠ Nome obrigatório.'; msg.style.color='var(--amber)'; return; }
+
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  msg.textContent = ''; 
+
+  const resp = await supaFetch(`contratos?id=eq.${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      nome_cliente: nome,
+      email_cliente: email,
+      whatsapp_cliente: whats,
+      razao_social: razao,
+      data_envio: envio
+    })
+  });
+
+  if (resp.ok) {
+    msg.textContent = '✅ Salvo!'; msg.style.color = 'var(--teal)';
+    btn.textContent = '✓ Salvo!';
+    setTimeout(() => { fecharModal('modal-editar'); carregarContratos(); }, 800);
+  } else {
+    msg.textContent = '❌ Erro ao salvar.'; msg.style.color = 'var(--red)';
+    btn.disabled = false; btn.textContent = '💾 Salvar alterações';
+  }
+}
+
+// ── Exportar relatório CSV ────────────────────────────────────────────────────
+function exportarRelatorio() {
+  const dados = todosContratos;
+  if (!dados.length) { alert('Nenhum dado para exportar.'); return; }
+
+  const headers = ['Nome','Empresa','Email','WhatsApp','Enviado em','Status','Dias pendente','Qtd contatos','Último resultado','Salvo no Drive'];
+  const labels  = { pendente:'Pendente', assinou:'Assinado', encerrado:'Encerrado', expirado:'Expirado' };
+
+  const rows = dados.map(c => {
+    const ultimo = c.historico?.length ? c.historico[c.historico.length-1] : null;
+    return [
+      c.nome_cliente||'',
+      c.razao_social||'',
+      c.email_cliente||'',
+      c.whatsapp_cliente||'',
+      c.data_envio||'',
+      labels[c.status]||c.status||'',
+      c.status==='pendente' ? diasPendente(c.data_envio) : '—',
+      c.historico?.length||0,
+      ultimo?.resultado||'—',
+      c.salvo_drive ? 'Sim' : 'Não'
+    ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(',');
+  });
+
+  const csv = '\uFEFF' + headers.join(',') + '\n' + rows.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `Contratos_Digital_${new Date().toISOString().split('T')[0]}.csv`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
 async function carregarContratos() {
@@ -723,6 +846,8 @@ function renderizar() {
     lista = lista.filter(c => c.status === 'assinou' && !c.salvo_drive);
   } else if (filtroAtual === 'expirados') {
     lista = lista.filter(c => c.status === 'expirado');
+  } else if (filtroAtual === 'encerrados') {
+    lista = todosContratos.filter(c => c.status === 'encerrado');
   } else {
     lista = lista.filter(c => c.status === 'pendente' || c.status === 'expirado');
     if (filtroAtual === 'hoje')   lista = lista.filter(c => { const p = calcularProximo(c.data_envio, c.historico.map(h=>h.data_contato)); return p && (isHoje(p)||isPassado(p)); });
@@ -754,7 +879,9 @@ function renderizar() {
     const ultimo   = c.historico.length ? c.historico[c.historico.length-1] : null;
     const diasClass= c.status==='assinou' ? '' : dias<=7 ? 'ok' : dias<=20 ? 'warn' : 'danger';
 
-    const proxTxt = c.status==='expirado'
+    const proxTxt = c.status==='encerrado'
+      ? '<span style="color:var(--text2);font-size:12px">📁 Encerrado</span>'
+      : c.status==='expirado'
       ? '<span class="badge-expirado">⏰ Expirado</span>'
       : c.status==='assinou'
       ? '<span class="badge-assinado">✅ Assinado</span>'
@@ -773,7 +900,9 @@ function renderizar() {
         : `<button class="badge-drive-nok" onclick="toggleDrive('${c.id}', false, '${c.nome_cliente}')" title="Clique para marcar como salvo no Drive">⚠ Drive</button>`
     ) : '';
 
-    const acoes = c.status === 'expirado'
+    const acoes = c.status === 'encerrado'
+      ? `<button class="btn-sm" onclick="abrirModalHist('${c.id}')">📋 Histórico</button>`
+      : c.status === 'expirado'
       ? `<button class="btn-sm primary" id="btn-reenviar-${c.id}" onclick="reenviarContrato('${c.id}')">↺ Reenviar</button>
          <button class="btn-sm" onclick="abrirModalHist('${c.id}')">📋</button>
          <button class="btn-sm danger" onclick="encerrar('${c.id}')">✕</button>`
@@ -786,6 +915,7 @@ function renderizar() {
          <button class="btn-sm danger" onclick="encerrar('${c.id}')">✕</button>`
       : `<button class="btn-sm primary" onclick="abrirModalContato('${c.id}')">📞 Contato</button>
          ${c.whatsapp_cliente ? `<a class="btn-wa" href="javascript:void(0)" onclick="abrirWhatsApp(todosContratos.find(x=>x.id==='${c.id}'), 'cadencia')">💬 Lembrete</a>` : ''}
+         <button class="btn-sm" onclick="abrirModalEditar('${c.id}')">✏️</button>
          <button class="btn-sm" onclick="abrirModalHist('${c.id}')">📋</button>
          <button class="btn-sm danger" onclick="encerrar('${c.id}')">✕</button>`;
 
@@ -859,7 +989,7 @@ function abrirModalContato(id) {
   document.getElementById('mc-titulo').textContent = `Registrar contato — ${c.nome_cliente}`;
   document.getElementById('mc-resultado').value = 'sem-resposta';
   document.getElementById('mc-canal').value     = 'WhatsApp';
-  document.getElementById('mc-feito').value     = '';
+  document.getElementById('mc-feito').value     = nomeAtendente;
   document.getElementById('mc-obs').value       = '';
   document.getElementById('msg-contato').textContent = '';
   document.getElementById('btn-salvar-contato').disabled = false;
@@ -932,7 +1062,9 @@ function abrirModalHist(id) {
 
 // ── Encerrar ──────────────────────────────────────────────────────────────────
 async function encerrar(id) {
-  if (!confirm('Encerrar o acompanhamento deste contrato?')) return;
+  const c = todosContratos.find(x => x.id === id);
+  const nome = c?.nome_cliente || 'este cliente';
+  if (!confirm(`⚠️ Encerrar o contrato de ${nome}?\n\nO contrato será movido para o histórico de encerrados e não aparecerá mais no painel ativo.\n\nEsta ação não pode ser desfeita.`)) return;
   await supaFetch(`contratos?id=eq.${id}`, {
     method: 'PATCH',
     body: JSON.stringify({ status: 'encerrado' })
@@ -997,5 +1129,24 @@ async function fazerLogout() {
   }
 })();
 </script>
+
+<!-- Modal: Editar contrato -->
+<div class="modal-bg" id="modal-editar">
+  <div class="modal-box">
+    <button class="modal-close" onclick="fecharModal('modal-editar')">✕</button>
+    <div class="modal-title">Editar contrato</div>
+    <input type="hidden" id="edit-id">
+    <div class="fg"><label>Nome do cliente</label><input type="text" id="edit-nome"></div>
+    <div class="row2">
+      <div class="fg"><label>E-mail</label><input type="email" id="edit-email"></div>
+      <div class="fg"><label>WhatsApp</label><input type="text" id="edit-whats" placeholder="Ex: 31 99999-9999"></div>
+    </div>
+    <div class="fg"><label>Empresa / Razão social</label><input type="text" id="edit-razao"></div>
+    <div class="fg"><label>Data de envio</label><input type="date" id="edit-envio"></div>
+    <div class="msg-status" id="msg-editar"></div>
+    <button class="btn-full" id="btn-salvar-editar" onclick="salvarEdicao()">💾 Salvar alterações</button>
+    <button class="btn-outline" onclick="fecharModal('modal-editar')">Cancelar</button>
+  </div>
+</div>
 </body>
 </html>

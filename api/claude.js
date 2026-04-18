@@ -256,12 +256,13 @@ export default async function handler(req, res) {
       const data = await resp.json();
       const docs = data.documents || [];
       
-      // Filtra apenas documentos com status 'running' (pendentes de assinatura)
-      const pendentes = docs.filter(doc => doc.status === 'running');
+      // Retorna todos os documentos (sem filtro) para diagnóstico
+      const pendentes = docs;
       
       // Formata os dados relevantes
       const formatados = pendentes.map(doc => ({
         key: doc.key,
+        status: doc.status,
         filename: doc.filename,
         status: doc.status,
         created_at: doc.created_at,

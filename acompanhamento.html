@@ -164,6 +164,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <div style="display:flex;gap:8px">
         <button class="btn-import" onclick="exportarRelatorio()" style="border-color:var(--teal);color:var(--teal)">📊 Exportar CSV</button>
         <button class="btn-import" onclick="abrirModalImport()">⬇ Importar da Clicksign</button>
+        <button class="btn-import" onclick="abrirWhatsLote()" style="border-color:#25d366;color:#25d366">📵 Add WhatsApp</button>
         <button class="btn-add" onclick="abrirModalNovo()">+ Adicionar contrato</button>
       </div>
     </div>
@@ -174,6 +175,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <div class="stat"><div class="stat-label">Próx. 3 dias</div><div class="stat-value teal" id="stat-prox">—</div></div>
       <div class="stat"><div class="stat-label">Críticos +20 dias</div><div class="stat-value red" id="stat-critico">—</div></div>
       <div class="stat"><div class="stat-label">Expirados</div><div class="stat-value red" id="stat-expirado">—</div></div>
+      <div class="stat"><div class="stat-label">Recusados</div><div class="stat-value red" id="stat-recusado">—</div></div>
     </div>
 
     <div class="filters">
@@ -187,6 +189,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <button class="filter-btn" onclick="filtrar('drive_pendente',this)">⚠ Falta salvar no Drive</button>
       <button class="filter-btn" onclick="filtrar('expirados',this)">⏰ Expirados</button>
       <button class="filter-btn" onclick="filtrar('encerrados',this)">📁 Encerrados</button>
+      <button class="filter-btn" onclick="filtrar('sem_whats',this)">📵 Sem WhatsApp</button>
+      <button class="filter-btn" onclick="filtrar('recusados',this)" style="border-color:#f87171;color:#f87171">🚫 Recusados</button>
     </div>
 
     <div class="table-wrap">
@@ -797,6 +801,58 @@ function exportarRelatorio() {
   document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
+
+// ── WhatsApp em lote ──────────────────────────────────────────────────────────
+function abrirWhatsLote() {
+  const semWhats = todosContratos.filter(c => c.status === 'pendente' && !c.whatsapp_cliente);
+  
+  if (!semWhats.length) {
+    alert('✅ Todos os contratos pendentes já têm WhatsApp cadastrado!');
+    return;
+  }
+
+  const lista = document.getElementById('lista-sem-whats');
+  lista.innerHTML = semWhats.map(c => `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;padding:10px 12px;background:var(--dark4);border-radius:8px;border:1px solid var(--border)">
+      <div>
+        <div style="font-size:13px;font-weight:500;color:var(--text)">${c.nome_cliente}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px">${c.email_cliente||'—'}</div>
+      </div>
+      <div>
+        <input type="text" id="wl-${c.id}" placeholder="Ex: 31 99999-9999"
+          style="width:100%;padding:7px 10px;font-size:13px;border:1px solid var(--border2);border-radius:6px;background:var(--dark);color:var(--text);outline:none;font-family:'Inter',sans-serif"
+          onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--border2)'">
+      </div>
+    </div>`).join('');
+
+  document.getElementById('msg-whats-lote').textContent = '';
+  document.getElementById('modal-whats-lote').classList.add('open');
+}
+
+async function salvarWhatsLote() {
+  const semWhats = todosContratos.filter(c => c.status === 'pendente' && !c.whatsapp_cliente);
+  const msg = document.getElementById('msg-whats-lote');
+  let salvos = 0, pulados = 0;
+
+  msg.textContent = 'Salvando...'; msg.style.color = 'var(--green)';
+
+  for (const c of semWhats) {
+    const input = document.getElementById('wl-' + c.id);
+    const fone  = input?.value?.trim();
+    if (!fone) { pulados++; continue; }
+
+    const resp = await supaFetch(`contratos?id=eq.${c.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ whatsapp_cliente: fone })
+    });
+    if (resp.ok) salvos++;
+  }
+
+  msg.textContent = `✅ ${salvos} salvo(s)${pulados ? `, ${pulados} sem preenchimento` : ''}.`;
+  msg.style.color = 'var(--teal)';
+  setTimeout(() => { fecharModal('modal-whats-lote'); carregarContratos(); }, 1000);
+}
+
 async function carregarContratos() {
   try {
     const resp = await supaFetch('contratos?select=*,contatos(*)&order=created_at.desc', { prefer: 'return=representation' });
@@ -835,6 +891,9 @@ function renderizar() {
   const expiradosCount = todosContratos.filter(c => c.status === 'expirado').length;
   const statExp = document.getElementById('stat-expirado');
   if (statExp) statExp.textContent = expiradosCount;
+  const recusadosCount = todosContratos.filter(c => c.status === 'recusado').length;
+  const statRec = document.getElementById('stat-recusado');
+  if (statRec) statRec.textContent = recusadosCount;
 
   // Filtro
   let lista = [...todosContratos];
@@ -848,8 +907,12 @@ function renderizar() {
     lista = lista.filter(c => c.status === 'expirado');
   } else if (filtroAtual === 'encerrados') {
     lista = todosContratos.filter(c => c.status === 'encerrado');
+  } else if (filtroAtual === 'sem_whats') {
+    lista = todosContratos.filter(c => c.status === 'pendente' && !c.whatsapp_cliente);
+  } else if (filtroAtual === 'recusados') {
+    lista = todosContratos.filter(c => c.status === 'recusado');
   } else {
-    lista = lista.filter(c => c.status === 'pendente' || c.status === 'expirado');
+    lista = lista.filter(c => c.status === 'pendente' || c.status === 'expirado' || c.status === 'recusado');
     if (filtroAtual === 'hoje')   lista = lista.filter(c => { const p = calcularProximo(c.data_envio, c.historico.map(h=>h.data_contato)); return p && (isHoje(p)||isPassado(p)); });
     if (filtroAtual === 'semana') lista = lista.filter(c => { const p = calcularProximo(c.data_envio, c.historico.map(h=>h.data_contato)); if(!p)return false; const d7=new Date();d7.setDate(d7.getDate()+7);return p>=hoje&&p<=d7.toISOString().split('T')[0]; });
     if (filtroAtual === 'critico') lista = lista.filter(c => diasPendente(c.data_envio) > 20);
@@ -879,7 +942,9 @@ function renderizar() {
     const ultimo   = c.historico.length ? c.historico[c.historico.length-1] : null;
     const diasClass= c.status==='assinou' ? '' : dias<=7 ? 'ok' : dias<=20 ? 'warn' : 'danger';
 
-    const proxTxt = c.status==='encerrado'
+    const proxTxt = c.status==='recusado'
+      ? '<span style="color:#f87171;font-size:12px;font-weight:600">🚫 Recusou assinar</span>'
+      : c.status==='encerrado'
       ? '<span style="color:var(--text2);font-size:12px">📁 Encerrado</span>'
       : c.status==='expirado'
       ? '<span class="badge-expirado">⏰ Expirado</span>'
@@ -900,7 +965,11 @@ function renderizar() {
         : `<button class="badge-drive-nok" onclick="toggleDrive('${c.id}', false, '${c.nome_cliente}')" title="Clique para marcar como salvo no Drive">⚠ Drive</button>`
     ) : '';
 
-    const acoes = c.status === 'encerrado'
+    const acoes = c.status === 'recusado'
+      ? `<button class="btn-sm primary" id="btn-reenviar-${c.id}" onclick="reenviarContrato('${c.id}')">↺ Reenviar</button>
+         <button class="btn-sm" onclick="abrirModalHist('${c.id}')">📋</button>
+         <button class="btn-sm danger" onclick="encerrar('${c.id}')">✕</button>`
+      : c.status === 'encerrado'
       ? `<button class="btn-sm" onclick="abrirModalHist('${c.id}')">📋 Histórico</button>`
       : c.status === 'expirado'
       ? `<button class="btn-sm primary" id="btn-reenviar-${c.id}" onclick="reenviarContrato('${c.id}')">↺ Reenviar</button>
@@ -1173,6 +1242,21 @@ async function fazerLogout() {
     <div class="msg-status" id="msg-editar"></div>
     <button class="btn-full" id="btn-salvar-editar" onclick="salvarEdicao()">💾 Salvar alterações</button>
     <button class="btn-outline" onclick="fecharModal('modal-editar')">Cancelar</button>
+  </div>
+</div>
+
+<!-- Modal: Adicionar WhatsApp em lote -->
+<div class="modal-bg" id="modal-whats-lote">
+  <div class="modal-box" style="max-width:560px">
+    <button class="modal-close" onclick="fecharModal('modal-whats-lote')">✕</button>
+    <div class="modal-title">📵 Contratos sem WhatsApp</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;line-height:1.6">
+      Preencha o WhatsApp de cada cliente para habilitar o botão de lembrete.
+    </p>
+    <div id="lista-sem-whats"></div>
+    <div class="msg-status" id="msg-whats-lote"></div>
+    <button class="btn-full" onclick="salvarWhatsLote()">💾 Salvar todos</button>
+    <button class="btn-outline" onclick="fecharModal('modal-whats-lote')">Fechar</button>
   </div>
 </div>
 </body>

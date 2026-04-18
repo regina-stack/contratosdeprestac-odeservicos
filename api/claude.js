@@ -411,5 +411,50 @@ export default async function handler(req, res) {
     }
   }
 
+  
+  // ── Rota 6: Reenviar contrato via Clicksign ───────────────────────────────
+  if (action === 'clicksign_reenviar') {
+    const token = process.env.CLICKSIGN_TOKEN;
+    if (!token) return res.status(500).json({ error: 'CLICKSIGN_TOKEN não configurado.' });
+
+    const { documentKey } = req.body;
+    if (!documentKey) return res.status(400).json({ error: 'documentKey é obrigatório.' });
+
+    try {
+      const BASE = 'https://app.clicksign.com/api/v1';
+
+      // Busca os signatários do documento original
+      const docResp = await fetch(`${BASE}/documents/${documentKey}?access_token=${token}`);
+      if (!docResp.ok) return res.status(404).json({ error: 'Documento não encontrado na Clicksign.' });
+
+      const docData = await docResp.json();
+      const doc     = docData.document;
+      const REGINA  = 'regina@digitalmaiscontabilidade.com';
+
+      // Pega o signatário cliente
+      const cliente = (doc.signers || []).find(s => s.email !== REGINA);
+      if (!cliente) return res.status(404).json({ error: 'Signatário cliente não encontrado.' });
+
+      // Notifica o cliente novamente via Clicksign
+      const notifResp = await fetch(`${BASE}/notifications?access_token=${token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          request_signature_key: cliente.request_signature_key || cliente.list_key,
+          message: `Olá ${cliente.name || ''}, seu contrato com a Digital+ Contabilidade ainda está aguardando sua assinatura. Por favor, assine assim que possível.`
+        })
+      });
+
+      return res.status(200).json({
+        success: true,
+        signUrl: cliente.url,
+        message: `Lembrete enviado para ${cliente.email} via Clicksign!`
+      });
+
+    } catch(e) {
+      return res.status(500).json({ error: e.message });
+    }
+  }
+
     return res.status(400).json({ error: 'Ação desconhecida.' });
 }

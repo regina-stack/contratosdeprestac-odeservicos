@@ -46,6 +46,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </div>
   <div class="msg" id="msg"></div>
   <button class="btn" id="btn-login" onclick="fazerLogin()">Entrar</button>
+  
+  <a href="#" onclick="esqueceuSenha()" class="link" style="display:block;text-align:center;margin-top:.75rem;font-size:13px;color:var(--text2);text-decoration:none">Esqueci minha senha</a>
   <div class="ver">Digital+ Web Contabilidade LTDA</div>
 </div>
 
@@ -84,6 +86,26 @@ async function fazerLogin() {
 
 // Enter para logar
 document.addEventListener('keydown', e => { if (e.key === 'Enter') fazerLogin(); });
+
+async function esqueceuSenha() {
+  const email = document.getElementById('email').value.trim();
+  const msg   = document.getElementById('msg');
+  if (!email) {
+    msg.textContent = 'Digite seu e-mail acima para receber o link.';
+    msg.className = 'msg erro';
+    document.getElementById('email').focus();
+    return;
+  }
+  msg.textContent = 'Enviando...'; msg.className = 'msg ok';
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: 'https://contratosdeprestac-odeservicos.vercel.app/redefinir-senha.html'
+  });
+  if (error) {
+    msg.textContent = '❌ ' + error.message; msg.className = 'msg erro';
+  } else {
+    msg.textContent = '✅ Link enviado! Verifique seu e-mail.'; msg.className = 'msg ok';
+  }
+}
 </script>
 </body>
 </html>

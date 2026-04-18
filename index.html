@@ -1,22 +1,32 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// Oculta página até confirmar login
+document.documentElement.style.visibility = 'hidden';
+(async function() {
+  try {
+    const { createClient } = supabase;
+    const sb = createClient('https://rkritsqmaiqyjdonsqqn.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrcml0c3FtYWlxeWpkb25zcXFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMTY1NzYsImV4cCI6MjA5MTg5MjU3Nn0.uej4YE67KOiL1UZsYaxO2ZD8BOyKL0qBPMrVoFKc-tI');
+    window._sb = sb;
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+      window.location.replace('/login.html?redirect=' + encodeURIComponent(window.location.pathname));
+      return;
+    }
+    document.documentElement.style.visibility = 'visible';
+  } catch(e) {
+    window.location.replace('/login.html');
+  }
+})();
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Digital+ Contabilidade | Gerador de Contratos</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-(function(){
-  const sb = supabase.createClient("","");
-  sb.auth.getSession().then(({data:{session}})=>{
-    if(!session){ window.location.href="/login.html?redirect="+encodeURIComponent(window.location.pathname); }
-  });
-  window._sb = sb;
-  window._logout = async function(){ await sb.auth.signOut(); window.location.href="/login.html"; };
-})();
-</script>
+
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700&family=Inter:wght@300;400;500&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}

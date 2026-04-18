@@ -686,6 +686,28 @@ async function enviarClicksign() {
     set('✅ ' + data.message, '#06d6a0');
     btn.textContent = '✓ Enviado!';
 
+    // Mostra botão WhatsApp de aviso de envio
+    if (whats) {
+      const foneWA = whats.replace(/\D/g,'');
+      const numero = foneWA.startsWith('55') ? foneWA : '55' + foneWA;
+      const linkAssinatura = data.signUrl ? '\n\n🔗 *Link para assinar:*\n' + data.signUrl : '';
+      const msgWA = encodeURIComponent(
+        'Olá ' + nome + '! 😊\n\n' +
+        'Seu contrato de prestação de serviços com a *Digital+ Contabilidade* foi enviado hoje para assinatura eletrônica.' +
+        linkAssinatura + '\n\n' +
+        '📧 Você também receberá o link por e-mail. Caso não encontre, verifique a caixa de spam.\n\n' +
+        'Qualquer dúvida estamos à disposição! 🙏\n\n' +
+        '*Digital+ Web Contabilidade*'
+      );
+      const waLink = 'https://wa.me/' + numero + '?text=' + msgWA;
+      const waBtn = document.createElement('a');
+      waBtn.href = waLink;
+      waBtn.target = '_blank';
+      waBtn.textContent = '💬 Avisar cliente no WhatsApp';
+      waBtn.style.cssText = 'display:block;margin-top:12px;padding:8px 16px;background:rgba(37,211,102,.1);border:1px solid #25d366;border-radius:8px;color:#25d366;text-decoration:none;font-size:13px;font-weight:600;text-align:center;font-family:Exo 2,sans-serif';
+      status.parentNode.insertBefore(waBtn, status.nextSibling);
+    }
+
   } catch(e) {
     set('❌ ' + e.message, '#f87171');
     btn.disabled = false;

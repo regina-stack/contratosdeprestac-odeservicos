@@ -128,6 +128,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .btn-pdf{padding:5px 10px;font-size:11px;font-weight:600;border-radius:6px;border:1px solid var(--teal);background:rgba(6,214,160,.08);color:var(--teal);cursor:pointer;font-family:'Exo 2',sans-serif;transition:all .15s;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
 .btn-pdf:hover{background:rgba(6,214,160,.2)}
 .btn-pdf:disabled{opacity:.5;cursor:not-allowed}
+
+.badge-drive-ok{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(6,214,160,.1);color:var(--teal);cursor:pointer;border:1px solid transparent;transition:all .15s}
+.badge-drive-ok:hover{border-color:var(--teal)}
+.badge-drive-nok{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;background:rgba(239,68,68,.12);color:#f87171;cursor:pointer;border:1px solid rgba(239,68,68,.3);animation:pulse-red 2s infinite;transition:all .15s}
+.badge-drive-nok:hover{background:rgba(239,68,68,.2)}
+@keyframes pulse-red{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.3)}50%{box-shadow:0 0 0 4px rgba(239,68,68,.0)}}
 </style>
 </head>
 <body>
@@ -169,6 +175,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <button class="filter-btn" onclick="filtrar('critico',this)">Críticos +20 dias</button>
       <button class="filter-btn" onclick="filtrar('novo',this)">Novos até 7 dias</button>
       <button class="filter-btn" onclick="filtrar('assinados',this)">Assinados ✅</button>
+      <button class="filter-btn" onclick="filtrar('drive_pendente',this)">⚠ Falta salvar no Drive</button>
     </div>
 
     <div class="table-wrap">
@@ -540,6 +547,8 @@ function renderizar() {
   let lista = [...todosContratos];
   if (filtroAtual === 'assinados') {
     lista = lista.filter(c => c.status === 'assinou');
+  } else if (filtroAtual === 'drive_pendente') {
+    lista = lista.filter(c => c.status === 'assinou' && !c.salvo_drive);
   } else {
     lista = lista.filter(c => c.status === 'pendente');
     if (filtroAtual === 'hoje')   lista = lista.filter(c => { const p = calcularProximo(c.data_envio, c.historico.map(h=>h.data_contato)); return p && (isHoje(p)||isPassado(p)); });
@@ -581,8 +590,16 @@ function renderizar() {
             ? `<span style="color:var(--amber);font-weight:600">📞 HOJE</span>`
             : `<span style="color:var(--text);font-size:13px">${fmtDataCurta(prox)}</span>`;
 
+    // Badge de salvo no Drive
+    const driveBadge = c.status === 'assinou' ? (
+      c.salvo_drive
+        ? `<button class="badge-drive-ok" onclick="toggleDrive('${c.id}', true, '${c.nome_cliente}')" title="Salvo no Drive por ${c.salvo_drive_por||''}">✓ Drive</button>`
+        : `<button class="badge-drive-nok" onclick="toggleDrive('${c.id}', false, '${c.nome_cliente}')" title="Clique para marcar como salvo no Drive">⚠ Drive</button>`
+    ) : '';
+
     const acoes = c.status === 'assinou'
-      ? `${c.document_key 
+      ? `${driveBadge}
+         ${c.document_key 
           ? `<button class="btn-sm primary" onclick="baixarPDF('${c.document_key}', '${c.nome_cliente}')" title="Baixar PDF assinado">⬇ PDF</button>` 
           : ''}
          <button class="btn-sm" onclick="abrirModalHist('${c.id}')">📋 Ver hist.</button>

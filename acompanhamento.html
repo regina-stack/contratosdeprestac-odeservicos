@@ -112,6 +112,18 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 .logout-btn{background:none;border:1px solid var(--border2);color:var(--text2);padding:8px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'Inter',sans-serif;margin-top:auto;width:100%;text-align:left;display:flex;align-items:center;gap:8px;transition:all .15s}
 .logout-btn:hover{border-color:#ef4444;color:#ef4444}
+
+.btn-import{display:flex;align-items:center;gap:8px;padding:9px 16px;font-size:13px;font-weight:600;font-family:'Exo 2',sans-serif;border-radius:8px;border:1px solid var(--border2);background:var(--dark4);color:var(--text2);cursor:pointer;transition:all .15s}
+.btn-import:hover{border-color:var(--teal);color:var(--teal)}
+.import-item{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;background:var(--dark4);border-radius:8px;margin-bottom:8px;border:1px solid var(--border)}
+.import-item.selected{border-color:var(--green);background:rgba(57,231,95,.05)}
+.import-check{width:18px;height:18px;accent-color:var(--green);cursor:pointer;flex-shrink:0;margin-top:2px}
+.import-info{flex:1}
+.import-name{font-size:13px;font-weight:500;color:var(--text)}
+.import-sub{font-size:11px;color:var(--text2);margin-top:3px;line-height:1.5}
+.import-status{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(245,158,11,.1);color:var(--amber);margin-top:4px}
+.import-already{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:rgba(148,168,148,.1);color:var(--text2);margin-top:4px}
+.select-all-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:13px;color:var(--text2);cursor:pointer}
 </style>
 </head>
 <body>
@@ -133,7 +145,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         <div class="page-title">Acompanhamento de contratos</div>
         <div class="page-sub">Contratos pendentes de assinatura — atualização em tempo real</div>
       </div>
-      <button class="btn-add" onclick="abrirModalNovo()">+ Adicionar contrato</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn-import" onclick="abrirModalImport()">⬇ Importar da Clicksign</button>
+        <button class="btn-add" onclick="abrirModalNovo()">+ Adicionar contrato</button>
+      </div>
     </div>
 
     <div class="stats">
@@ -166,6 +181,26 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         <div class="loading"><span class="spin"></span>Carregando contratos...</div>
       </div>
     </div>
+  </div>
+</div>
+
+
+<!-- Modal: Importar da Clicksign -->
+<div class="modal-bg" id="modal-import">
+  <div class="modal-box" style="max-width:580px">
+    <button class="modal-close" onclick="fecharModal('modal-import')">✕</button>
+    <div class="modal-title">Importar contratos da Clicksign</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;line-height:1.6">
+      Selecione os contratos pendentes que deseja adicionar ao painel de acompanhamento.
+    </p>
+    <div id="import-lista">
+      <div class="loading"><span class="spin"></span>Buscando documentos...</div>
+    </div>
+    <div class="msg-status" id="msg-import"></div>
+    <button class="btn-full" id="btn-importar" onclick="confirmarImport()" style="display:none">
+      ✦ Importar selecionados
+    </button>
+    <button class="btn-outline" onclick="fecharModal('modal-import')">Fechar</button>
   </div>
 </div>
 

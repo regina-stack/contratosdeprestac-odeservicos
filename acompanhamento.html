@@ -440,6 +440,27 @@ async function confirmarImport() {
   setTimeout(() => { fecharModal('modal-import'); carregarContratos(); }, 1500);
 }
 
+
+// ── Flag Google Drive ─────────────────────────────────────────────────────────
+async function toggleDrive(contratoId, salvoAtual, nomeCliente) {
+  const novoStatus = !salvoAtual;
+  const hoje = new Date().toISOString();
+  try {
+    const { data: { session } } = await window._sb.auth.getSession();
+    const userEmail = session?.user?.email || 'Sistema';
+    const resp = await supaFetch(`contratos?id=eq.${contratoId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        salvo_drive: novoStatus,
+        salvo_drive_por: novoStatus ? userEmail : null,
+        salvo_drive_em: novoStatus ? hoje : null
+      })
+    });
+    if (resp.ok) { carregarContratos(); }
+    else { alert('Erro ao atualizar status do Drive.'); }
+  } catch(e) { alert('Erro: ' + e.message); }
+}
+
 const SUPA_URL = 'https://rkritsqmaiqyjdonsqqn.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrcml0c3FtYWlxeWpkb25zcXFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMTY1NzYsImV4cCI6MjA5MTg5MjU3Nn0.uej4YE67KOiL1UZsYaxO2ZD8BOyKL0qBPMrVoFKc-tI';
 

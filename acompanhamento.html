@@ -123,6 +123,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <a href="/index.html" class="nav-link"><span class="nav-icon">📄</span>Gerar contrato</a>
     <a href="/acompanhamento.html" class="nav-link active"><span class="nav-icon">📋</span>Acompanhamento</a>
   
+    <a href="/usuarios.html" class="nav-link" id="nav-usuarios" style="display:none"><span class="nav-icon">👥</span>Usuários</a>
     <button class="logout-btn" onclick="fazerLogout()"><span>🚪</span>Sair</button>
   </div>
 
@@ -563,6 +564,15 @@ async function fazerLogout() {
   }
   window.location.href = '/login.html';
 }
+
+// Mostra aba Usuários só para a Regina
+(async function() {
+  const { data: { session } } = await window._sb.auth.getSession();
+  if (session && session.user.email === 'regina@digitalmaiscontabilidade.com') {
+    const el = document.getElementById('nav-usuarios');
+    if (el) el.style.display = 'flex';
+  }
+})();
 </script>
 </body>
 </html>

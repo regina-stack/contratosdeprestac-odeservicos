@@ -99,6 +99,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .btn-add{display:flex;align-items:center;gap:8px;padding:9px 18px;font-size:13px;font-weight:600;font-family:'Exo 2',sans-serif;border-radius:8px;border:1px solid var(--green);background:rgba(57,231,95,.08);color:var(--green);cursor:pointer;transition:all .15s}
 .btn-add:hover{background:rgba(57,231,95,.15)}
 @media(max-width:900px){.sidebar{display:none}.main{margin-left:0}.stats{grid-template-columns:1fr 1fr}.table-head{display:none}.contract-row{grid-template-columns:1fr;gap:8px}}
+
+.logout-btn{background:none;border:1px solid var(--border2);color:var(--text2);padding:8px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'Inter',sans-serif;margin-top:auto;width:100%;text-align:left;display:flex;align-items:center;gap:8px;transition:all .15s}
+.logout-btn:hover{border-color:#ef4444;color:#ef4444}
 </style>
 </head>
 <body>
@@ -109,6 +112,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     </div>
     <a href="/index.html" class="nav-link"><span class="nav-icon">📄</span>Gerar contrato</a>
     <a href="/acompanhamento.html" class="nav-link active"><span class="nav-icon">📋</span>Acompanhamento</a>
+  
+    <button class="logout-btn" onclick="fazerLogout()"><span>🚪</span>Sair</button>
   </div>
 
   <div class="main">
@@ -537,6 +542,13 @@ document.querySelectorAll('.modal-bg').forEach(m => {
 // ── Init + auto-refresh ───────────────────────────────────────────────────────
 carregarContratos();
 setInterval(carregarContratos, 30000); // Atualiza a cada 30s
+
+async function fazerLogout() {
+  if (window._sb) {
+    await window._sb.auth.signOut();
+  }
+  window.location.href = '/login.html';
+}
 </script>
 </body>
 </html>

@@ -243,8 +243,8 @@ export default async function handler(req, res) {
     try {
       const BASE = 'https://app.clicksign.com/api/v1';
       
-      // Busca documentos com status running (pendentes)
-      const resp = await fetch(`${BASE}/documents?access_token=${token}&status=running`, {
+      // Busca todos os documentos pendentes (sem filtro de status)
+      const resp = await fetch(`${BASE}/documents?access_token=${token}`, {
         headers: { 'Content-Type': 'application/json' }
       });
       
@@ -256,8 +256,13 @@ export default async function handler(req, res) {
       const data = await resp.json();
       const docs = data.documents || [];
       
+      // Filtra apenas documentos não finalizados
+      const pendentes = docs.filter(doc => 
+        doc.status !== 'closed' && doc.status !== 'cancelled' && doc.status !== 'expired'
+      );
+      
       // Formata os dados relevantes
-      const formatados = docs.map(doc => ({
+      const formatados = pendentes.map(doc => ({
         key: doc.key,
         filename: doc.filename,
         status: doc.status,

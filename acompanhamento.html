@@ -140,6 +140,27 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 .btn-wa{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;font-size:11px;font-weight:600;border-radius:6px;border:1px solid #25d366;background:rgba(37,211,102,.08);color:#25d366;cursor:pointer;font-family:'Exo 2',sans-serif;text-decoration:none;transition:all .15s;white-space:nowrap}
 .btn-wa:hover{background:rgba(37,211,102,.18)}
+
+/* Tema claro */
+body.light{
+  --green:#1a8f35;--teal:#05a07a;--amber:#d97706;--red:#dc2626;
+  --dark:#f5f7f5;--dark3:#ffffff;--dark4:#f0f4f0;
+  --border:#d1ddd1;--border2:#b8ccb8;
+  --text:#1a2e1a;--text2:#4a6a4a;
+}
+body.light::before{background:none}
+body.light .sidebar{background:#ffffff;border-right:1px solid var(--border)}
+body.light .table-wrap{background:#ffffff}
+body.light .contract-row:hover{background:#f8faf8}
+body.light .modal-box{background:#ffffff}
+body.light .fg input,body.light .fg select,body.light .fg textarea{background:#f8faf8;color:var(--text)}
+body.light .stat{background:#ffffff}
+body.light .card{background:#ffffff}
+body.light .btn-sm{background:#f0f4f0;color:var(--text2)}
+body.light .filter-btn{background:#f0f4f0;color:var(--text2)}
+body.light .import-item{background:#f0f4f0}
+body.light .hist-item{background:#f0f4f0}
+body.light select option{background:#ffffff;color:var(--text)}
 </style>
 </head>
 <body>
@@ -152,6 +173,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <a href="/acompanhamento.html" class="nav-link active"><span class="nav-icon">📋</span>Acompanhamento</a>
   
     <a href="/usuarios.html" class="nav-link" id="nav-usuarios" style="display:none"><span class="nav-icon">👥</span>Usuários</a>
+    <button onclick="toggleTema()" id="btn-tema" style="background:none;border:1px solid var(--border2);color:var(--text2);padding:8px 12px;border-radius:8px;cursor:pointer;font-size:13px;width:100%;text-align:left;display:flex;align-items:center;gap:8px;margin-bottom:4px;font-family:'Inter',sans-serif;transition:all .15s" title="Alternar tema"><span id="tema-icon">☀️</span>Tema claro/escuro</button>
     <button class="logout-btn" onclick="fazerLogout()"><span>🚪</span>Sair</button>
   </div>
 

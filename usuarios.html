@@ -83,6 +83,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .btn-outline{width:100%;padding:10px;font-size:13px;font-weight:500;font-family:'Inter',sans-serif;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--text2);cursor:pointer;margin-top:.5rem}
 .msg{font-size:13px;margin-top:.75rem;min-height:18px}
 .msg.ok{color:var(--teal)}.msg.erro{color:var(--red)}
+
+body.light{--dark:#f5f7f5;--dark3:#ffffff;--dark4:#f0f4f0;--border:#d1ddd1;--border2:#b8ccb8;--text:#1a2e1a;--text2:#4a6a4a;--green:#1a8f35;--teal:#05a07a;}
+body.light .sidebar{background:#ffffff;border-right:1px solid var(--border)}
+body.light .modal-box,.body.light .box{background:#ffffff}
+body.light .fg input,.body.light .fg select{background:#f8faf8;color:var(--text)}
 </style>
 </head>
 <body>
@@ -267,6 +272,8 @@ document.querySelectorAll('.modal-bg').forEach(m=>{
 
 async function fazerLogout() { await sb.auth.signOut(); window.location.href='/login.html'; }
 init();
+
+(function(){if(localStorage.getItem('tema')==='light')document.body.classList.add('light')})();
 </script>
 </body>
 </html>

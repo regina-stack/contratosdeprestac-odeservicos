@@ -27,6 +27,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .msg.erro{color:#f87171}
 .msg.ok{color:var(--teal)}
 .ver{text-align:center;font-size:11px;color:var(--border2);margin-top:1.5rem}
+
+body.light{--dark:#f5f7f5;--dark3:#ffffff;--dark4:#f0f4f0;--border:#d1ddd1;--border2:#b8ccb8;--text:#1a2e1a;--text2:#4a6a4a;--green:#1a8f35;--teal:#05a07a;}
+body.light .sidebar{background:#ffffff;border-right:1px solid var(--border)}
+body.light .modal-box,.body.light .box{background:#ffffff}
+body.light .fg input,.body.light .fg select{background:#f8faf8;color:var(--text)}
 </style>
 </head>
 <body>
@@ -106,6 +111,8 @@ async function esqueceuSenha() {
     msg.textContent = '✅ Link enviado! Verifique seu e-mail.'; msg.className = 'msg ok';
   }
 }
+
+(function(){if(localStorage.getItem('tema')==='light')document.body.classList.add('light')})();
 </script>
 </body>
 </html>

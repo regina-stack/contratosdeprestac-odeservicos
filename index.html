@@ -133,6 +133,32 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .topbar-btn-logout:hover{border-color:#ef4444;color:#ef4444}
 .topbar-usuarios{display:none}
 .app{padding-top:72px}
+
+/* Personalizações do contrato */
+.personalizacoes{margin-top:1.5rem;border-top:1px solid var(--border);padding-top:1.25rem}
+.personalizacoes .sec{margin-top:0}
+.toggle-item{background:var(--dark4);border:1px solid var(--border2);border-radius:10px;margin-bottom:.75rem;overflow:hidden;transition:border-color .15s}
+.toggle-item.ativo{border-color:rgba(57,231,95,.3)}
+.toggle-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;cursor:pointer;user-select:none}
+.toggle-header:hover{background:rgba(57,231,95,.03)}
+.toggle-label{font-size:13px;font-weight:500;color:var(--text2);display:flex;align-items:center;gap:8px}
+.toggle-label.ativo{color:var(--green)}
+.toggle-body{display:none;padding:0 14px 14px;border-top:1px solid var(--border)}
+.toggle-body.show{display:block}
+.toggle-switch{position:relative;width:36px;height:20px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider2{position:absolute;inset:0;background:#2a3a2a;border-radius:20px;transition:.2s;cursor:pointer}
+.toggle-slider2::before{content:'';position:absolute;width:14px;height:14px;left:3px;top:3px;background:#666;border-radius:50%;transition:.2s}
+.toggle-switch input:checked+.toggle-slider2{background:rgba(57,231,95,.2)}
+.toggle-switch input:checked+.toggle-slider2::before{background:var(--green);transform:translateX(16px)}
+.servicos-lista{display:flex;flex-direction:column;gap:8px;margin-top:.75rem}
+.servico-row{display:grid;grid-template-columns:1fr 140px 32px;gap:8px;align-items:center}
+.servico-row input{padding:7px 10px;font-size:13px;border:1px solid var(--border2);border-radius:7px;background:var(--dark);color:var(--text);outline:none;font-family:'Inter',sans-serif;width:100%}
+.servico-row input:focus{border-color:var(--green)}
+.btn-del-srv{background:none;border:1px solid transparent;color:var(--text2);cursor:pointer;border-radius:6px;padding:4px 8px;font-size:13px;transition:all .15s;line-height:1}
+.btn-del-srv:hover{border-color:var(--red);color:var(--red)}
+.btn-add-srv{margin-top:.5rem;padding:6px 14px;font-size:12px;font-weight:600;border:1px dashed var(--border2);border-radius:7px;background:transparent;color:var(--text2);cursor:pointer;font-family:'Exo 2',sans-serif;width:100%;transition:all .15s}
+.btn-add-srv:hover{border-color:var(--green);color:var(--green)}
 </style>
 </head>
 <body>
@@ -308,6 +334,95 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
             <button onclick="addPlanRow()" style="margin-top:.75rem;padding:6px 14px;font-size:12px;font-weight:600;border:1px dashed var(--border2);border-radius:8px;background:transparent;color:var(--text2);cursor:pointer;font-family:'Exo 2',sans-serif;width:100%;transition:all .15s" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">+ Adicionar linha</button>
           </div>
         </div>
+      
+      <!-- PERSONALIZAÇÕES DO CONTRATO -->
+      <div class="personalizacoes">
+        <p class="sec">Cláusulas especiais — ative apenas se aplicável</p>
+
+        <!-- Toggle: Fidelidade e Multa -->
+        <div class="toggle-item" id="ti-fidelidade">
+          <div class="toggle-header" onclick="togglePersonalizacao('fidelidade')">
+            <span class="toggle-label" id="tl-fidelidade">⏳ Período de fidelidade e multa rescisória</span>
+            <label class="toggle-switch" onclick="event.stopPropagation()">
+              <input type="checkbox" id="tog-fidelidade" onchange="togglePersonalizacao('fidelidade')">
+              <span class="toggle-slider2"></span>
+            </label>
+          </div>
+          <div class="toggle-body" id="tb-fidelidade">
+            <div class="row2" style="margin-top:.75rem">
+              <div class="fg">
+                <label>Prazo de fidelidade</label>
+                <input type="text" id="fid-prazo" placeholder="Ex: 3 meses, 6 meses, 12 meses">
+              </div>
+              <div class="fg">
+                <label>Multa rescisória</label>
+                <input type="text" id="fid-multa" placeholder="Ex: 50% da mensalidade x meses restantes">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Toggle: Serviços Adicionais -->
+        <div class="toggle-item" id="ti-adicionais">
+          <div class="toggle-header" onclick="togglePersonalizacao('adicionais')">
+            <span class="toggle-label" id="tl-adicionais">➕ Serviços adicionais contratados</span>
+            <label class="toggle-switch" onclick="event.stopPropagation()">
+              <input type="checkbox" id="tog-adicionais" onchange="togglePersonalizacao('adicionais')">
+              <span class="toggle-slider2"></span>
+            </label>
+          </div>
+          <div class="toggle-body" id="tb-adicionais">
+            <div class="servicos-lista" id="servicos-lista">
+              <div class="servico-row">
+                <input type="text" placeholder="Nome do serviço (ex: Checkup Contábil)">
+                <input type="text" placeholder="Valor (ex: R$ 200,00)">
+                <button class="btn-del-srv" onclick="removerServico(this)" title="Remover">✕</button>
+              </div>
+            </div>
+            <button class="btn-add-srv" onclick="adicionarServico()">+ Adicionar serviço</button>
+          </div>
+        </div>
+
+        <!-- Toggle: Condições de Entrada -->
+        <div class="toggle-item" id="ti-entrada">
+          <div class="toggle-header" onclick="togglePersonalizacao('entrada')">
+            <span class="toggle-label" id="tl-entrada">💰 Condições de entrada (1º mês diferenciado)</span>
+            <label class="toggle-switch" onclick="event.stopPropagation()">
+              <input type="checkbox" id="tog-entrada" onchange="togglePersonalizacao('entrada')">
+              <span class="toggle-slider2"></span>
+            </label>
+          </div>
+          <div class="toggle-body" id="tb-entrada">
+            <div class="row2" style="margin-top:.75rem">
+              <div class="fg">
+                <label>Valor do 1º mês</label>
+                <input type="text" id="ent-valor1" placeholder="Ex: R$ 107,50">
+              </div>
+              <div class="fg">
+                <label>Parcelamento</label>
+                <input type="text" id="ent-parcelas" placeholder="Ex: 2x de R$ 153,75">
+              </div>
+            </div>
+            <div class="row2">
+              <div class="fg">
+                <label>Forma de pagamento</label>
+                <select id="ent-forma" style="width:100%;padding:8px 12px;font-size:13px;border:1px solid var(--border2);border-radius:8px;background:var(--dark4);color:var(--text);outline:none">
+                  <option>Pix</option>
+                  <option>Boleto</option>
+                  <option>Pix + Boleto</option>
+                  <option>Cartão de crédito</option>
+                  <option>Dinheiro</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label>Vencimento da 2ª parcela</label>
+                <input type="text" id="ent-venc2" placeholder="Ex: 25/05/2026">
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
       <p class="sec">Regime e datas</p>
       <div class="row2">
         <div class="fg"><label>Regime tributário</label>
@@ -622,9 +737,70 @@ function getData() {
 }
 
 // ── Resumo Step 4 ─────────────────────────────────────────────────────────────
+
+// ── Personalizações do contrato ───────────────────────────────────────────────
+function togglePersonalizacao(id) {
+  const tog  = document.getElementById('tog-' + id);
+  const body = document.getElementById('tb-' + id);
+  const item = document.getElementById('ti-' + id);
+  const lbl  = document.getElementById('tl-' + id);
+  const ativo = tog.checked;
+  body.classList.toggle('show', ativo);
+  item.classList.toggle('ativo', ativo);
+  lbl.classList.toggle('ativo', ativo);
+}
+
+function adicionarServico() {
+  const lista = document.getElementById('servicos-lista');
+  const row = document.createElement('div');
+  row.className = 'servico-row';
+  row.innerHTML = `
+    <input type="text" placeholder="Nome do serviço">
+    <input type="text" placeholder="Valor (ex: R$ 200,00)">
+    <button class="btn-del-srv" onclick="removerServico(this)" title="Remover">✕</button>`;
+  lista.appendChild(row);
+}
+
+function removerServico(btn) {
+  const lista = document.getElementById('servicos-lista');
+  if (lista.children.length <= 1) return;
+  btn.closest('.servico-row').remove();
+}
+
+function getPersonalizacoes() {
+  const fidelidade = document.getElementById('tog-fidelidade')?.checked;
+  const adicionais = document.getElementById('tog-adicionais')?.checked;
+  const entrada    = document.getElementById('tog-entrada')?.checked;
+
+  const servicos = [];
+  if (adicionais) {
+    document.querySelectorAll('#servicos-lista .servico-row').forEach(row => {
+      const inputs = row.querySelectorAll('input');
+      const nome   = inputs[0]?.value?.trim();
+      const valor  = inputs[1]?.value?.trim();
+      if (nome) servicos.push({ nome, valor });
+    });
+  }
+
+  return {
+    fidelidade: fidelidade ? {
+      prazo: document.getElementById('fid-prazo')?.value?.trim(),
+      multa: document.getElementById('fid-multa')?.value?.trim()
+    } : null,
+    adicionais: adicionais && servicos.length ? servicos : null,
+    entrada: entrada ? {
+      valor1:   document.getElementById('ent-valor1')?.value?.trim(),
+      parcelas: document.getElementById('ent-parcelas')?.value?.trim(),
+      forma:    document.getElementById('ent-forma')?.value,
+      venc2:    document.getElementById('ent-venc2')?.value?.trim()
+    } : null
+  };
+}
+
 function buildResumo() {
   const d = getData();
   const honRes = getPlansData();
+  const pers   = getPersonalizacoes();
   const rows = [
     ['Cliente', d.razao||'—'], ['CNPJ', d.cnpj_val||'—'],
     ['Representante', d.socio||'—'], ['Regime', d.regime||'—'],
@@ -633,7 +809,10 @@ function buildResumo() {
       : ['Plano inicial', d.plano||'—'],
     ['Flexibilização', d.flexAtivo ? '✓ Incluída' : '✗ Não incluída'],
     ['Início', d.inicio ? fmtDate(d.inicio) : '—'],
-    ['1º vencimento', d.vencData ? fmtDate(d.vencData) : '—']
+    ['1º vencimento', d.vencData ? fmtDate(d.vencData) : '—'],
+    ...(pers.fidelidade ? [['Fidelidade', pers.fidelidade.prazo], ['Multa rescisória', pers.fidelidade.multa]] : []),
+    ...(pers.adicionais ? [['Serviços adicionais', pers.adicionais.map(s=>s.nome+(s.valor?' ('+s.valor+')':'')).join(', ')]] : []),
+    ...(pers.entrada ? [['Entrada (1º mês)', pers.entrada.valor1 + ' — ' + pers.entrada.parcelas]] : [])
   ];
   document.getElementById('resumo').innerHTML = rows
     .map(([l,val]) => `<div class="sum-row"><span class="sum-lbl">${l}</span><span class="sum-val">${val}</span></div>`)
@@ -882,10 +1061,33 @@ ${d.flexAtivo ? c7flex : c7simples}
 <p>Esse valor contempla a elaboração e entrega de obrigações anuais, tais como: DEFIS, ECD, ECF, encerramento contábil, emissão dos livros fiscais e contábeis (em formato físico ou eletrônico) e, quando aplicável, o respectivo registro desses livros – excluídas as taxas de registro, que correrão por conta da CONTRATANTE. A execução dessas atividades não prejudicará a continuidade e regularidade dos demais serviços contratados.</p>
 <p><strong>CLÁUSULA NONA.</strong> Todos os serviços extraordinários não contratados que forem necessários anteriores à data de vigência do contrato ou solicitados pelo contratante serão cobrados à parte, com preços previamente convencionados.</p>
 <p><strong>PARÁGRAFO ÚNICO.</strong> Os serviços como: Alteração contratual, extinção contratual, IBGE, Decore, homologações, IRPF, emissão de notas fiscais, reemissão de guias não pagas, certificação digital, treinamentos de funcionários e sócios, consultorias financeiras, tributárias, societárias e trabalhistas, que não são objetos do presente contrato <strong>serão cobrados separadamente do valor do honorário.</strong></p>
+${(function() {
+    const p = getPersonalizacoes();
+    let extra = '';
+    // Cláusula 7-A: Condições de Entrada
+    if (p.entrada) {
+      extra += '<p><strong>CLÁUSULA SÉTIMA — A.</strong> As condições financeiras de entrada são as seguintes: o valor referente ao primeiro mês de vigência do contrato será de <strong>' + (p.entrada.valor1||'—') + '</strong>, parcelado em <strong>' + (p.entrada.parcelas||'—') + '</strong>, via <strong>' + (p.entrada.forma||'—') + '</strong>' + (p.entrada.venc2 ? ', com vencimento da segunda parcela em <strong>' + p.entrada.venc2 + '</strong>' : '') + '.</p>';
+    }
+    // Cláusula 9-A: Serviços Adicionais
+    if (p.adicionais && p.adicionais.length) {
+      const lista = p.adicionais.map(s => '<li><strong>' + s.nome + '</strong>' + (s.valor ? ' — ' + s.valor : '') + '</li>').join('');
+      extra += '<p><strong>CLÁUSULA NONA — A.</strong> Além dos honorários mensais estabelecidos neste contrato, ficam contratados os seguintes serviços adicionais:</p><ul>' + lista + '</ul><p>Os valores acima serão cobrados conforme acordado entre as partes e não integram o valor da mensalidade mensal.</p>';
+    }
+    return extra;
+  })()}
 <p><strong>CLÁUSULA DÉCIMA.</strong> Em caso de inadimplemento contratual superior a 10 (dez) dias, os serviços prestados poderão ser bloqueados pela CONTRATADA, independentemente de aviso prévio. A CONTRATANTE permanecerá responsável pelos efeitos decorrentes do não cumprimento de suas obrigações contratuais e tributárias. A CONTRATADA reserva-se o direito de promover o protesto dos títulos e/ou ajuizar as medidas cabíveis para a cobrança dos valores em atraso.</p>
-<p><strong>CLÁUSULA DÉCIMA PRIMEIRA.</strong> Este instrumento é feito por tempo indeterminado, iniciando-se <strong>${inicio}</strong> e podendo ser rescindido em qualquer época, por qualquer uma das partes.</p>
-<p><strong>PARÁGRAFO PRIMEIRO.</strong> O rompimento do vínculo contratual obriga as partes à celebração de distrato com a especificação da cessação das responsabilidades dos contratantes, bem como comunicar ao CRC/MG.</p>
-<p><strong>PARÁGRAFO SEGUNDO.</strong> A contratada obriga-se a entregar os documentos, Livros Contábeis e Fiscais e/ou arquivos eletrônicos à CONTRATANTE ou a outro profissional da Contabilidade por ela indicado, após a assinatura do distrato entre as partes.</p>
+${(function() {
+    const p = getPersonalizacoes();
+    if (p.fidelidade && p.fidelidade.prazo) {
+      return '<p><strong>CLÁUSULA DÉCIMA PRIMEIRA.</strong> Este instrumento tem prazo mínimo de fidelidade de <strong>' + p.fidelidade.prazo + '</strong>, contados a partir da data de início em <strong>' + inicio + '</strong>, podendo ser rescindido após este período por qualquer uma das partes.</p>' +
+        '<p><strong>PARÁGRAFO PRIMEIRO.</strong> Em caso de rescisão antecipada dentro do período de fidelidade, a CONTRATANTE pagará multa rescisória correspondente a <strong>' + (p.fidelidade.multa||'valor a ser negociado entre as partes') + '</strong>.</p>' +
+        '<p><strong>PARÁGRAFO SEGUNDO.</strong> O rompimento do vínculo contratual obriga as partes à celebração de distrato com a especificação da cessação das responsabilidades dos contratantes, bem como comunicar ao CRC/MG.</p>' +
+        '<p><strong>PARÁGRAFO TERCEIRO.</strong> A contratada obriga-se a entregar os documentos, Livros Contábeis e Fiscais e/ou arquivos eletrônicos à CONTRATANTE ou a outro profissional da Contabilidade por ela indicado, após a assinatura do distrato entre as partes.</p>';
+    }
+    return '<p><strong>CLÁUSULA DÉCIMA PRIMEIRA.</strong> Este instrumento é feito por tempo indeterminado, iniciando-se <strong>' + inicio + '</strong> e podendo ser rescindido em qualquer época, por qualquer uma das partes.</p>' +
+      '<p><strong>PARÁGRAFO PRIMEIRO.</strong> O rompimento do vínculo contratual obriga as partes à celebração de distrato com a especificação da cessação das responsabilidades dos contratantes, bem como comunicar ao CRC/MG.</p>' +
+      '<p><strong>PARÁGRAFO SEGUNDO.</strong> A contratada obriga-se a entregar os documentos, Livros Contábeis e Fiscais e/ou arquivos eletrônicos à CONTRATANTE ou a outro profissional da Contabilidade por ela indicado, após a assinatura do distrato entre as partes.</p>';
+  })()}
 <p><strong>CLÁUSULA DÉCIMA SEGUNDA.</strong> A CONTRATADA fornecerá suporte por e-mail, WhatsApp ou aplicativo de celular dentro do horário normal de expediente, de segunda a quinta de <strong>08h00min às 12h00min e 13h00min às 18h00min</strong>, e às sextas-feiras das <strong>08h00min às 12h00min e 13h00min às 17h00min</strong> sobre as informações relativas aos serviços ora contratados.</p>
 <p><strong>PARÁGRAFO ÚNICO.</strong> A CONTRATADA atenderá as solicitações realizadas pela CONTRATANTE em um prazo máximo de até 48 horas, exceto em casos mais complexos em que demandarem um prazo maior para execução.</p>
 <p><strong>CLÁUSULA DÉCIMA TERCEIRA.</strong> A CONTRATANTE se responsabiliza por cumprir as exigências junto ao Conselho Representativo da Classe Profissional, efetuando o seu registro físico e jurídico (se necessário) e realizando os pagamentos pertinentes ao registro e anuidade, ciente das possíveis penalidades na falta do registro.</p>

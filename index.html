@@ -159,6 +159,35 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .btn-del-srv:hover{border-color:var(--red);color:var(--red)}
 .btn-add-srv{margin-top:.5rem;padding:6px 14px;font-size:12px;font-weight:600;border:1px dashed var(--border2);border-radius:7px;background:transparent;color:var(--text2);cursor:pointer;font-family:'Exo 2',sans-serif;width:100%;transition:all .15s}
 .btn-add-srv:hover{border-color:var(--green);color:var(--green)}
+
+/* Tema claro */
+body.light{
+  --green:#1a8f35;--teal:#05a07a;--amber:#d97706;--red:#dc2626;
+  --dark:#f5f7f5;--dark3:#ffffff;--dark4:#f0f4f0;
+  --border:#d1ddd1;--border2:#b8ccb8;
+  --text:#1a2e1a;--text2:#4a6a4a;
+}
+body.light::before{background:radial-gradient(ellipse 60% 40% at 50% -10%,rgba(26,143,53,0.05) 0%,transparent 70%)}
+body.light .topbar{background:rgba(245,247,245,0.97);border-bottom:1px solid var(--border)}
+body.light .sidebar{background:#ffffff;border-right:1px solid var(--border)}
+body.light .table-wrap{background:#ffffff}
+body.light .contract-row:hover{background:#f8faf8}
+body.light .modal-box{background:#ffffff}
+body.light .fg input,
+body.light .fg select,
+body.light .fg textarea{background:#f8faf8;color:var(--text)}
+body.light #planos-table input[type=text],
+body.light #planos-table textarea{background:#f8faf8;color:var(--text)}
+body.light .stat{background:#ffffff}
+body.light .card{background:#ffffff}
+body.light .uz{background:#f8faf8}
+body.light .upload-box{background:#f8faf8}
+body.light .topbar-link:hover{background:#f0f4f0}
+body.light .btn-sm{background:#f0f4f0;color:var(--text2)}
+body.light .filter-btn{background:#f0f4f0;color:var(--text2)}
+body.light .toggle-item{background:#f8faf8}
+body.light .hon-opt{background:#f8faf8}
+body.light select option{background:#ffffff;color:var(--text)}
 </style>
 </head>
 <body>
@@ -210,7 +239,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <a href="/index.html" class="topbar-link active">📄 Gerar contrato</a>
     <a href="/acompanhamento.html" class="topbar-link">📋 Acompanhamento</a>
     <a href="/usuarios.html" class="topbar-link topbar-usuarios" id="topbar-usuarios">👥 Usuários</a>
-    <button class="topbar-btn-logout" onclick="fazerLogout()">🚪 Sair</button>
+    <button onclick="toggleTema()" id="btn-tema" style="background:none;border:1px solid var(--border2);color:var(--text2);padding:6px 10px;border-radius:8px;cursor:pointer;font-size:14px;transition:all .15s;margin-right:4px" title="Alternar tema">☀️</button>
+        <button class="topbar-btn-logout" onclick="fazerLogout()">🚪 Sair</button>
   </div>
 </div>
 <div class="app">
@@ -796,6 +826,26 @@ function getPersonalizacoes() {
     } : null
   };
 }
+
+
+// ── Tema claro/escuro ─────────────────────────────────────────────────────────
+function toggleTema() {
+  const isLight = document.body.classList.toggle('light');
+  localStorage.setItem('tema', isLight ? 'light' : 'dark');
+  const btn = document.getElementById('btn-tema');
+  if (btn) btn.textContent = isLight ? '🌙' : '☀️';
+}
+// Aplica tema salvo ao carregar
+(function() {
+  const tema = localStorage.getItem('tema');
+  if (tema === 'light') {
+    document.body.classList.add('light');
+    setTimeout(() => {
+      const btn = document.getElementById('btn-tema');
+      if (btn) btn.textContent = '🌙';
+    }, 100);
+  }
+})();
 
 function buildResumo() {
   const d = getData();

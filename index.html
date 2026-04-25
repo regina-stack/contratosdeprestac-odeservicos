@@ -464,6 +464,17 @@ body.light select option{background:#ffffff;color:var(--text)}
       </div>
       <div class="row3">
         <div class="fg"><label>Data de início</label><input type="date" id="f-inicio"></div>
+        <div class="fg"><label>Dia do vencimento mensal</label>
+          <select id="f-dia-venc" style="width:100%;padding:8px 12px;font-size:13px;border:1px solid var(--border2);border-radius:8px;background:var(--dark4);color:var(--text);outline:none;font-family:'Inter',sans-serif">
+            <option value="5">Dia 5</option>
+            <option value="10" selected>Dia 10</option>
+            <option value="15">Dia 15</option>
+            <option value="20">Dia 20</option>
+            <option value="25">Dia 25</option>
+            <option value="28">Dia 28</option>
+            <option value="ultimo">Último dia do mês</option>
+          </select>
+        </div>
         <div class="fg"><label>1º vencimento</label><input type="date" id="f-venc-data"></div>
         <div class="fg"><label>Cidade de assinatura</label><input type="text" id="f-local" value="Santa Luzia"></div>
       </div>
@@ -759,7 +770,7 @@ function getData() {
   return {
     socio: v('f-socio'), cpf: v('f-cpf'), qual: v('f-qual'),
     razao: v('f-razao'), cnpj_val: v('f-cnpj'), end: v('f-end'),
-    regime: v('f-regime'), plano: v('f-plano'),
+    regime: v('f-regime'), plano: v('f-plano'), diaVenc: document.getElementById('f-dia-venc')?.value || '10',
     inicio: v('f-inicio'), vencData: v('f-venc-data'), local: v('f-local'),
     flexAtivo: document.getElementById('tog-flex').checked,
     planos: (getPlansData().tipo === "planos" ? getPlansData().plans : [])
@@ -860,6 +871,7 @@ function buildResumo() {
     ['Flexibilização', d.flexAtivo ? '✓ Incluída' : '✗ Não incluída'],
     ['Início', d.inicio ? fmtDate(d.inicio) : '—'],
     ['1º vencimento', d.vencData ? fmtDate(d.vencData) : '—'],
+    ['Dia do vencimento mensal', 'Todo dia ' + (d.diaVenc === 'ultimo' ? 'último' : d.diaVenc) + ' de cada mês'],
     ...(pers.fidelidade ? [['Fidelidade', pers.fidelidade.prazo], ['Multa rescisória', pers.fidelidade.multa]] : []),
     ...(pers.adicionais ? [['Serviços adicionais', pers.adicionais.map(s=>s.nome+(s.valor?' ('+s.valor+')':'')).join(', ')]] : []),
     ...(pers.entrada ? [['Entrada (1º mês)', pers.entrada.valor1 + ' — ' + pers.entrada.parcelas]] : [])
@@ -1071,12 +1083,12 @@ const nomeServico = honData.nome || 'Acompanhamento mensal';
 ${tabelaHTML}
 <p><strong>PARÁGRAFO PRIMEIRO.</strong> Os honorários serão reajustados no mês de janeiro de cada ano ou quando houver aumento dos serviços contratados, tendo como base a variação do Salário-Mínimo vigente no País.</p>
 <p><strong>PARÁGRAFO SEGUNDO.</strong> Os honorários ora estabelecidos foram definidos com base no volume de serviços prestados na data de assinatura deste contrato, bem como na legislação vigente. Caso as autoridades municipais, estaduais ou federais venham a instituir novos procedimentos de natureza fiscal ou contábil, ou ainda, havendo aumento significativo no volume dos serviços prestados, tal situação constituirá motivo legítimo para renegociação dos honorários aqui estipulados.</p>
-<p><strong>PARÁGRAFO TERCEIRO.</strong> Os pagamentos serão realizados todo dia 10 (dez) de cada mês, com o <strong>primeiro vencimento em ${venc}</strong>.</p>
+<p><strong>PARÁGRAFO TERCEIRO.</strong> Os pagamentos serão realizados todo dia <strong>${d.diaVenc === 'ultimo' ? 'último' : d.diaVenc}</strong> de cada mês, com o <strong>primeiro vencimento em ${venc}</strong>.</p>
 <p><strong>PARÁGRAFO QUARTO.</strong> O pagamento dos serviços de objeto do contrato dar-se-á através de <strong>Boleto Bancário</strong> que será direcionado no e-mail fornecido pela CONTRATANTE.</p>
 <p><strong>PARÁGRAFO QUINTO.</strong> A CONTRATANTE pagará multa de 2% (dois por cento) e juros moratórios de 1% (um por cento) ao mês em caso de atraso.</p>
 <p><strong>PARÁGRAFO SEXTO.</strong> Os serviços de Departamento Pessoal para colaboradores contratados sob o regime CLT não foram incluídos no escopo deste contrato. Caso seja necessário realizar registros de funcionários, será cobrada uma taxa adicional de R$ 70,00 (setenta reais) por colaborador registrado.</p>`;
 
-  const c7simples = `<p><strong>CLÁUSULA SÉTIMA.</strong> Pelos serviços ora contratados, a CONTRATANTE pagará à CONTRATADA o valor mensal de <strong>${valor}</strong>, no regime <strong>${d.regime}</strong>, com vencimento todo dia 10 (dez) de cada mês, com o <strong>primeiro vencimento em ${venc}</strong>.</p>
+  const c7simples = `<p><strong>CLÁUSULA SÉTIMA.</strong> Pelos serviços ora contratados, a CONTRATANTE pagará à CONTRATADA o valor mensal de <strong>${valor}</strong>, no regime <strong>${d.regime}</strong>, com vencimento todo dia <strong>${d.diaVenc === 'ultimo' ? 'último' : d.diaVenc}</strong> de cada mês, com o <strong>primeiro vencimento em ${venc}</strong>.</p>
 <p><strong>PARÁGRAFO PRIMEIRO.</strong> Os honorários serão reajustados no mês de janeiro de cada ano ou quando houver aumento dos serviços contratados, tendo como base a variação do Salário-Mínimo vigente no País.</p>
 <p><strong>PARÁGRAFO SEGUNDO.</strong> Os honorários ora estabelecidos foram definidos com base no volume de serviços prestados na data de assinatura deste contrato, bem como na legislação vigente. Caso as autoridades municipais, estaduais ou federais venham a instituir novos procedimentos de natureza fiscal ou contábil, ou ainda, havendo aumento significativo no volume dos serviços prestados, tal situação constituirá motivo legítimo para renegociação dos honorários aqui estipulados.</p>
 <p><strong>PARÁGRAFO TERCEIRO.</strong> O pagamento dos serviços de objeto do contrato dar-se-á através de <strong>Boleto Bancário</strong> que será direcionado no e-mail fornecido pela CONTRATANTE.</p>
@@ -1110,11 +1122,12 @@ ${d.flexAtivo ? c7flex : c7simples}
 ${(function() {
     const p = getPersonalizacoes();
     if (!p.entrada) return '';
-    const v1    = p.entrada.valor1 || '—';
-    const parc  = p.entrada.parcelas || '—';
-    const forma = p.entrada.forma || '—';
-    const v2    = p.entrada.venc2 ? ', com vencimento da 2ª parcela em ' + p.entrada.venc2 : '';
-    return '<p><strong>CLÁUSULA SÉTIMA A.</strong> As condições financeiras de entrada são as seguintes: o valor total da entrada é de <strong>' + v1 + '</strong>, parcelado em <strong>' + parc + '</strong>, via <strong>' + forma + '</strong>' + v2 + '.</p>';
+    const v1    = p.entrada.valor1   || '—';
+    const parc  = p.entrada.parcelas || '';
+    const forma = p.entrada.forma    || '—';
+    const v2    = p.entrada.venc2 ? ' O vencimento da 2ª parcela será em ' + p.entrada.venc2 + '.' : '';
+    const parcTxt = parc ? ', parcelado em ' + parc : '';
+    return '<p><strong>CLÁUSULA SÉTIMA A.</strong> Fica estabelecido que o valor de entrada referente ao início da vigência deste contrato será de <strong>' + v1 + '</strong>' + parcTxt + ', a ser pago via <strong>' + forma + '</strong>.' + v2 + '</p>';
   })()}
 <p><strong>CLÁUSULA OITAVA.</strong> A CONTRATANTE pagará o valor de uma parcela mensal, rateado entre os meses de novembro e dezembro, destinado à execução das obrigações acessórias e encerramento do exercício fiscal.</p>
 <p>Esse valor contempla a elaboração e entrega de obrigações anuais, tais como: DEFIS, ECD, ECF, encerramento contábil, emissão dos livros fiscais e contábeis (em formato físico ou eletrônico) e, quando aplicável, o respectivo registro desses livros – excluídas as taxas de registro, que correrão por conta da CONTRATANTE. A execução dessas atividades não prejudicará a continuidade e regularidade dos demais serviços contratados.</p>

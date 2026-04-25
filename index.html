@@ -425,32 +425,26 @@ body.light select option{background:#ffffff;color:var(--text)}
           <div class="toggle-body" id="tb-entrada">
             <div class="row2" style="margin-top:.75rem">
               <div class="fg">
-                <label>Valor do 1º mês</label>
-                <input type="text" id="ent-valor1" placeholder="Ex: R$ 107,50">
+                <label>Valor total da entrada</label>
+                <input type="text" id="ent-valor1" placeholder="Ex: R$ 307,50">
               </div>
-              <div class="fg">
-                <label>Parcelamento</label>
-                <input type="text" id="ent-parcelas" placeholder="Ex: 2x de R$ 153,75">
-              </div>
-            </div>
-            <div class="row2">
               <div class="fg">
                 <label>Forma de pagamento</label>
-                <select id="ent-forma" style="width:100%;padding:8px 12px;font-size:13px;border:1px solid var(--border2);border-radius:8px;background:var(--dark4);color:var(--text);outline:none">
-                  <option>Pix</option>
-                  <option>Boleto</option>
-                  <option>Pix + Boleto</option>
-                  <option>Cartão de crédito</option>
-                  <option>Dinheiro</option>
-                </select>
+                <input type="text" id="ent-forma" placeholder="Ex: Pix, Boleto, Cartão...">
               </div>
-              <div class="fg">
-                <label>Vencimento da 2ª parcela</label>
-                <input type="text" id="ent-venc2" placeholder="Ex: 25/05/2026">
-              </div>
+            </div>
+            <div class="fg">
+              <label>Parcelamento (descreva como foi negociado)</label>
+              <input type="text" id="ent-parcelas" placeholder="Ex: 3x de R$ 102,50 com venc. 25/04, 25/05 e 25/06/2026">
+            </div>
+            <div class="fg">
+              <label>Observação adicional (opcional)</label>
+              <input type="text" id="ent-obs" placeholder="Ex: 1ª parcela paga no ato, demais via boleto">
             </div>
           </div>
         </div>
+
+      </div>
 
       </div>
       <p class="sec">Regime e datas</p>
@@ -824,7 +818,7 @@ function getPersonalizacoes() {
     entrada: entrada ? {
       valor1:   document.getElementById('ent-valor1')?.value?.trim(),
       parcelas: document.getElementById('ent-parcelas')?.value?.trim(),
-      forma:    document.getElementById('ent-forma')?.value,
+      forma:    document.getElementById('ent-forma')?.value?.trim(),
       venc2:    document.getElementById('ent-venc2')?.value?.trim()
     } : null
   };
@@ -866,7 +860,7 @@ function buildResumo() {
     ['Dia do vencimento mensal', 'Todo dia ' + (d.diaVenc || '10') + ' de cada mês'],
     ...(pers.fidelidade ? [['Fidelidade', pers.fidelidade.prazo], ['Multa rescisória', pers.fidelidade.multa]] : []),
     ...(pers.adicionais ? [['Serviços adicionais', pers.adicionais.map(s=>s.nome+(s.valor?' ('+s.valor+')':'')).join(', ')]] : []),
-    ...(pers.entrada ? [['Entrada (1º mês)', pers.entrada.valor1 + ' — ' + pers.entrada.parcelas]] : [])
+    ...(pers.entrada ? [['Entrada', pers.entrada.valor1 + (pers.entrada.parcelas ? ' — ' + pers.entrada.parcelas : '') + ' via ' + pers.entrada.forma]] : [])
   ];
   document.getElementById('resumo').innerHTML = rows
     .map(([l,val]) => `<div class="sum-row"><span class="sum-lbl">${l}</span><span class="sum-val">${val}</span></div>`)
@@ -1117,9 +1111,10 @@ ${(function() {
     const v1    = p.entrada.valor1   || '—';
     const parc  = p.entrada.parcelas || '';
     const forma = p.entrada.forma    || '—';
-    const v2    = p.entrada.venc2 ? ' O vencimento da 2ª parcela será em ' + p.entrada.venc2 + '.' : '';
-    const parcTxt = parc ? ', parcelado em ' + parc : '';
-    return '<p><strong>CLÁUSULA SÉTIMA A.</strong> Fica estabelecido que o valor de entrada referente ao início da vigência deste contrato será de <strong>' + v1 + '</strong>' + parcTxt + ', a ser pago via <strong>' + forma + '</strong>.' + v2 + '</p>';
+    const obs   = p.entrada.venc2    || '';
+    const parcTxt = parc ? ' Parcelamento: ' + parc + '.' : '';
+    const obsTxt  = obs  ? ' ' + obs  + '.' : '';
+    return '<p><strong>CLÁUSULA SÉTIMA A.</strong> Fica estabelecido que o valor de entrada referente ao início da vigência deste contrato será de <strong>' + v1 + '</strong>, a ser pago via <strong>' + forma + '</strong>.' + parcTxt + obsTxt + '</p>';
   })()}
 <p><strong>CLÁUSULA OITAVA.</strong> A CONTRATANTE pagará o valor de uma parcela mensal, rateado entre os meses de novembro e dezembro, destinado à execução das obrigações acessórias e encerramento do exercício fiscal.</p>
 <p>Esse valor contempla a elaboração e entrega de obrigações anuais, tais como: DEFIS, ECD, ECF, encerramento contábil, emissão dos livros fiscais e contábeis (em formato físico ou eletrônico) e, quando aplicável, o respectivo registro desses livros – excluídas as taxas de registro, que correrão por conta da CONTRATANTE. A execução dessas atividades não prejudicará a continuidade e regularidade dos demais serviços contratados.</p>

@@ -1107,23 +1107,24 @@ ${tabelaHTML}
 <p><strong>CLÁUSULA SEXTA.</strong> A contratada se obriga a entregar ao contratante, mediante protocolo, em tempo hábil, os balancetes, o Balanço Patrimonial e as demais demonstrações contábeis, documentos necessários para que este efetue os devidos pagamentos e recolhimentos obrigatórios, bem como comprovante de entrega das obrigações acessórias.</p>
 <p><strong>PARÁGRAFO ÚNICO.</strong> As multas decorrentes da entrega fora do prazo contratado das obrigações previstas no <em>caput</em> deste artigo, ou que forem decorrentes da imperfeição ou inexecução dos serviços por parte da contratada, serão de sua responsabilidade.</p>
 ${d.flexAtivo ? c7flex : c7simples}
+${(function() {
+    const p = getPersonalizacoes();
+    if (!p.entrada) return '';
+    const v1    = p.entrada.valor1 || '—';
+    const parc  = p.entrada.parcelas || '—';
+    const forma = p.entrada.forma || '—';
+    const v2    = p.entrada.venc2 ? ', com vencimento da 2ª parcela em ' + p.entrada.venc2 : '';
+    return '<p><strong>CLÁUSULA SÉTIMA A.</strong> As condições financeiras de entrada são as seguintes: o valor total da entrada é de <strong>' + v1 + '</strong>, parcelado em <strong>' + parc + '</strong>, via <strong>' + forma + '</strong>' + v2 + '.</p>';
+  })()}
 <p><strong>CLÁUSULA OITAVA.</strong> A CONTRATANTE pagará o valor de uma parcela mensal, rateado entre os meses de novembro e dezembro, destinado à execução das obrigações acessórias e encerramento do exercício fiscal.</p>
 <p>Esse valor contempla a elaboração e entrega de obrigações anuais, tais como: DEFIS, ECD, ECF, encerramento contábil, emissão dos livros fiscais e contábeis (em formato físico ou eletrônico) e, quando aplicável, o respectivo registro desses livros – excluídas as taxas de registro, que correrão por conta da CONTRATANTE. A execução dessas atividades não prejudicará a continuidade e regularidade dos demais serviços contratados.</p>
 <p><strong>CLÁUSULA NONA.</strong> Todos os serviços extraordinários não contratados que forem necessários anteriores à data de vigência do contrato ou solicitados pelo contratante serão cobrados à parte, com preços previamente convencionados.</p>
 <p><strong>PARÁGRAFO ÚNICO.</strong> Os serviços como: Alteração contratual, extinção contratual, IBGE, Decore, homologações, IRPF, emissão de notas fiscais, reemissão de guias não pagas, certificação digital, treinamentos de funcionários e sócios, consultorias financeiras, tributárias, societárias e trabalhistas, que não são objetos do presente contrato <strong>serão cobrados separadamente do valor do honorário.</strong></p>
 ${(function() {
     const p = getPersonalizacoes();
-    let extra = '';
-    // Cláusula 7-A: Condições de Entrada
-    if (p.entrada) {
-      extra += '<p><strong>CLÁUSULA SÉTIMA — A.</strong> As condições financeiras de entrada são as seguintes: o valor referente ao primeiro mês de vigência do contrato será de <strong>' + (p.entrada.valor1||'—') + '</strong>, parcelado em <strong>' + (p.entrada.parcelas||'—') + '</strong>, via <strong>' + (p.entrada.forma||'—') + '</strong>' + (p.entrada.venc2 ? ', com vencimento da segunda parcela em <strong>' + p.entrada.venc2 + '</strong>' : '') + '.</p>';
-    }
-    // Cláusula 9-A: Serviços Adicionais
-    if (p.adicionais && p.adicionais.length) {
-      const lista = p.adicionais.map(s => '<li><strong>' + s.nome + '</strong>' + (s.valor ? ' — ' + s.valor : '') + '</li>').join('');
-      extra += '<p><strong>CLÁUSULA NONA — A.</strong> Além dos honorários mensais estabelecidos neste contrato, ficam contratados os seguintes serviços adicionais:</p><ul>' + lista + '</ul><p>Os valores acima serão cobrados conforme acordado entre as partes e não integram o valor da mensalidade mensal.</p>';
-    }
-    return extra;
+    if (!p.adicionais || !p.adicionais.length) return '';
+    const lista = p.adicionais.map(s => '<li><strong>' + s.nome + '</strong>' + (s.valor ? ' — R$ ' + s.valor : '') + '</li>').join('');
+    return '<p><strong>CLÁUSULA NONA A.</strong> Além dos honorários mensais estabelecidos neste contrato, ficam contratados os seguintes serviços adicionais:</p><ul>' + lista + '</ul><p>Os valores acima serão cobrados conforme acordado entre as partes e não integram o valor da mensalidade mensal.</p>';
   })()}
 <p><strong>CLÁUSULA DÉCIMA.</strong> Em caso de inadimplemento contratual superior a 10 (dez) dias, os serviços prestados poderão ser bloqueados pela CONTRATADA, independentemente de aviso prévio. A CONTRATANTE permanecerá responsável pelos efeitos decorrentes do não cumprimento de suas obrigações contratuais e tributárias. A CONTRATADA reserva-se o direito de promover o protesto dos títulos e/ou ajuizar as medidas cabíveis para a cobrança dos valores em atraso.</p>
 ${(function() {

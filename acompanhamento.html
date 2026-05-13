@@ -460,21 +460,39 @@ async function abrirModalImport() {
     const data = await resp.json();
     if (!resp.ok || data.error) throw new Error(data.error || 'Erro ao buscar');
 
-    docsClicksign = data.documents || [];
+    // Filtra: remove qualquer documento que pareça TERMO DE DÍVIDA (não é contrato)
+    const todosOsDocs = data.documents || [];
+    docsClicksign = todosOsDocs.filter(doc => {
+      const nome = (doc.filename || '').toLowerCase();
+      // Exclui se o nome do arquivo contém "termo", "divida", "dívida", "confissao", "confissão" ou "renegociacao"
+      const ehTermo = /termo|d[ií]vida|confiss[aã]o|renegocia[cç][aã]o|acordo/i.test(nome);
+      return !ehTermo;
+    });
+    const termosExcluidos = todosOsDocs.length - docsClicksign.length;
 
-    // Busca document_keys já importados no Supabase
+    // Busca document_keys já importados no Supabase (contratos E termos para evitar duplicatas)
     const jaResp = await supaFetch('contratos?select=document_key&document_key=not.is.null');
     const jaData = await jaResp.json();
     const keysImportadas = new Set(jaData.map(c => c.document_key));
 
+    // Também busca document_keys que já estão na tabela TERMOS para não importá-los como contrato
+    const termosResp = await supaFetchTermos('termos?select=document_key&document_key=not.is.null');
+    const termosData = await termosResp.json();
+    const keysTermos = new Set(termosData.map(t => t.document_key));
+
     if (!docsClicksign.length) {
-      document.getElementById('import-lista').innerHTML = '<div class="empty">Nenhum contrato pendente encontrado na Clicksign.</div>';
+      const aviso = termosExcluidos > 0
+        ? `<div class="empty">Nenhum contrato pendente encontrado.<br><br><span style="color:var(--amber);font-size:12px">⚠ ${termosExcluidos} documento(s) identificado(s) como termo(s) de dívida foram ignorado(s). Eles aparecem na aba <strong>Termos de Dívida</strong>.</span></div>`
+        : '<div class="empty">Nenhum contrato pendente encontrado na Clicksign.</div>';
+      document.getElementById('import-lista').innerHTML = aviso;
       return;
     }
 
     const REGINA = 'regina@digitalmaiscontabilidade.com';
     const items = docsClicksign.map((doc, i) => {
-      const jaImportado = keysImportadas.has(doc.key);
+      // Já importado se está em contratos OU se está em termos
+      const jaImportado = keysImportadas.has(doc.key) || keysTermos.has(doc.key);
+      const ehTermoNoBanco = keysTermos.has(doc.key);
       const cliente = doc.signers?.find(s => s.email !== REGINA);
       const dataCriacao = doc.created_at ? new Date(doc.created_at).toLocaleDateString('pt-BR') : '—';
       const nomeArq = doc.filename?.replace('.pdf','').replace(/_/g,' ') || 'Sem nome';
@@ -489,16 +507,22 @@ async function abrirModalImport() {
             · Enviado em ${dataCriacao}
 
           </div>
-          ${jaImportado
-            ? '<span class="import-already">✓ Já importado</span>'
-            : '<span class="import-status">Pendente de assinatura</span>'}
+          ${ehTermoNoBanco
+            ? '<span class="import-already" style="color:var(--amber)">📝 É um termo (não pode importar como contrato)</span>'
+            : jaImportado
+              ? '<span class="import-already">✓ Já importado</span>'
+              : '<span class="import-status">Pendente de assinatura</span>'}
         </div>
       </div>`;
     }).join('');
 
-    const novos = docsClicksign.filter(d => !keysImportadas.has(d.key)).length;
+    const novos = docsClicksign.filter(d => !keysImportadas.has(d.key) && !keysTermos.has(d.key)).length;
+    const avisoTermos = termosExcluidos > 0
+      ? `<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--amber)">⚠ ${termosExcluidos} documento(s) identificado(s) como termo(s) de dívida pelo nome do arquivo foram ocultado(s) desta lista. Para acompanhar termos, use a aba <strong>Termos de Dívida</strong>.</div>`
+      : '';
 
     document.getElementById('import-lista').innerHTML = `
+      ${avisoTermos}
       <div class="select-all-row" onclick="toggleTodos()">
         <input type="checkbox" id="check-all" checked style="accent-color:var(--green)">
         <span>Selecionar todos os ${novos} novos</span>
@@ -551,11 +575,25 @@ async function confirmarImport() {
   msg.textContent = `Importando ${selecionados.length} contrato(s)...`;
   msg.style.color = 'var(--green)';
 
+  // Busca novamente as keys de termos para garantir que nenhum termo seja importado como contrato
+  let keysTermos = new Set();
+  try {
+    const termosResp = await supaFetchTermos('termos?select=document_key&document_key=not.is.null');
+    const termosData = await termosResp.json();
+    keysTermos = new Set(termosData.map(t => t.document_key));
+  } catch(e) { console.error('Erro ao buscar termos:', e); }
+
   const hoje = new Date().toISOString().split('T')[0];
-  let importados = 0, erros = 0;
+  let importados = 0, erros = 0, pulados = 0;
 
   for (const doc of selecionados) {
     try {
+      // Defesa final: se o document_key já existe na tabela termos, pular
+      if (keysTermos.has(doc.key)) {
+        pulados++;
+        continue;
+      }
+
       const cliente = doc.signers?.find(s => s.email !== REGINA);
       const nomeArq = doc.filename?.replace('.pdf','').replace(/_/g,' ') || 'Contrato';
       const dataEnvio = doc.created_at ? doc.created_at.split('T')[0] : hoje;
@@ -591,10 +629,13 @@ async function confirmarImport() {
     } catch(e) { erros++; console.error(e); }
   }
 
-  msg.textContent = `✅ ${importados} importado(s)!${erros ? ` (${erros} erro(s))` : ''}`;
+  const partes = [`✅ ${importados} importado(s)!`];
+  if (pulados > 0) partes.push(`${pulados} pulado(s) (já é termo)`);
+  if (erros > 0)   partes.push(`${erros} erro(s)`);
+  msg.textContent = partes.join(' · ');
   msg.style.color = 'var(--teal)';
   btn.textContent = '✓ Concluído!';
-  setTimeout(() => { fecharModal('modal-import'); carregarContratos(); }, 1500);
+  setTimeout(() => { fecharModal('modal-import'); carregarContratos(); }, 1800);
 }
 
 

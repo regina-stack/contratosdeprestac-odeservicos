@@ -423,22 +423,31 @@ async function extractIA() {
   try {
     const parts = [];
     for (const [k,f] of Object.entries(uploadedFiles)) {
+      if (!f) continue;
       const b64 = await toB64(f);
-      parts.push({ type: getMime(f), data: b64, name: k === 'cs' ? 'Contrato Social' : 'Cartão CNPJ' });
+      const mt  = getMime(f);
+      parts.push(mt === 'application/pdf'
+        ? { type:'document', source:{ type:'base64', media_type:mt, data:b64 } }
+        : { type:'image',    source:{ type:'base64', media_type:mt, data:b64 } });
     }
+    parts.push({ type:'text', text:'Analise estes documentos (Contrato Social e/ou Cartão CNPJ) e extraia os dados do devedor/empresa. Responda SOMENTE com JSON válido, sem texto adicional, sem backticks. Formato: {"socio":"nome completo do sócio","cpf":"CPF formatado","qualificacao":"cargo/qualificação","razao_social":"razão social da empresa","cnpj":"CNPJ formatado","endereco":"endereço completo com CEP","email":"email se disponível","telefone":"telefone se disponível"}' });
     const resp = await fetch('/api/claude', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'extract', documents: parts })
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ messages: [{ role:'user', content:parts }] })
     });
-    const data = await resp.json();
-    if (data.error) throw new Error(data.error);
-    const d = data.dados || {};
-    if (d.razao_social)  setVal('d-nome', d.razao_social);
-    if (d.cnpj)          setVal('d-cnpj', d.cnpj);
-    if (d.email)         setVal('d-email', d.email);
-    if (d.telefone)      setVal('d-tel', d.telefone);
-    if (d.endereco)      setVal('d-end', d.endereco);
+    if (!resp.ok) throw new Error('Erro ' + resp.status);
+    const raw  = await resp.json();
+    const text = raw.content?.[0]?.text || '';
+    const clean = text.replace(/```json|```/g,'').trim();
+    const d = JSON.parse(clean);
+    if (d.razao_social || d.socio) {
+      setVal('d-nome',  d.razao_social || d.socio);
+      setVal('d-cnpj',  d.cnpj);
+      setVal('d-rg',    d.cpf);
+      setVal('d-email', d.email);
+      setVal('d-tel',   d.telefone);
+      setVal('d-end',   d.endereco);
+    }
     goStep(2);
   } catch(e) {
     alert('Erro na extração: ' + e.message);

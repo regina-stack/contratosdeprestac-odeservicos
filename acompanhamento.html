@@ -140,6 +140,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 .btn-wa{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;font-size:11px;font-weight:600;border-radius:6px;border:1px solid #25d366;background:rgba(37,211,102,.08);color:#25d366;cursor:pointer;font-family:'Exo 2',sans-serif;text-decoration:none;transition:all .15s;white-space:nowrap}
 .btn-wa:hover{background:rgba(37,211,102,.18)}
+/* Tags de tipo de documento */
+.tag-tipo{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-right:8px;vertical-align:middle;font-family:'Exo 2',sans-serif}
+.tag-tipo.contrato{background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.3)}
+.tag-tipo.termo{background:rgba(245,158,11,.15);color:var(--amber);border:1px solid rgba(245,158,11,.3)}
 
 /* Tema claro */
 body.light{
@@ -662,17 +666,21 @@ async function abrirWhatsApp(contrato, tipo) {
   if (tipo === 'envio') {
     msg = encodeURIComponent(
       `Olá ${nome}! 😊\n\n` +
-      `Seu contrato de prestação de serviços com a *Digital+ Contabilidade* foi enviado hoje para assinatura eletrônica.` +
+      `Aqui é a equipe da *Digital+ Web Contabilidade*.\n\n` +
+      `Seu *contrato de prestação de serviços contábeis* foi enviado hoje para assinatura eletrônica via Clicksign.` +
       linkTxt +
-      `\n\nQualquer dúvida estamos à disposição! 🙏\n\n` +
+      `\n\n📧 Você também receberá o link no e-mail cadastrado. Se não encontrar, verifique a caixa de spam.\n\n` +
+      `A assinatura é rápida, segura e leva menos de 2 minutos. Qualquer dúvida estamos à disposição! 🙏\n\n` +
       `*Digital+ Web Contabilidade*`
     );
   } else {
     msg = encodeURIComponent(
       `Olá ${nome}! 😊\n\n` +
-      `Passando para lembrar que seu contrato com a *Digital+ Contabilidade* está aguardando sua assinatura há *${diasPend} dia(s)*.` +
+      `Aqui é a equipe da *Digital+ Web Contabilidade*.\n\n` +
+      `Passando para lembrar que seu *contrato de prestação de serviços contábeis* está aguardando sua assinatura há *${diasPend} dia(s)*.` +
       linkTxt +
-      `\n\nQualquer dúvida estamos à disposição! 🙏\n\n` +
+      `\n\n📧 O e-mail com o link também foi enviado pela Clicksign — verifique caixa de entrada e spam.\n\n` +
+      `A assinatura é rápida, segura e leva menos de 2 minutos. Qualquer dúvida estamos à disposição! 🙏\n\n` +
       `*Digital+ Web Contabilidade*`
     );
   }
@@ -786,7 +794,7 @@ function renderizarTermos() {
       ? `${t.document_key?`<button class="btn-sm primary" onclick="baixarPDF('${t.document_key}','${t.nome_devedor}')">⬇ PDF</button>`:''} ${driveB} <button class="btn-sm" onclick="abrirHistTermo('${t.id}')">📋</button> <button class="btn-sm danger" onclick="encerrarTermo('${t.id}')">✕</button>`
       : `<button class="btn-sm primary" onclick="abrirContatoTermo('${t.id}')">📞</button> ${t.whatsapp_devedor?`<a class="btn-wa" href="javascript:void(0)" onclick="waTermoLembrete(todosTermos.find(x=>x.id==='${t.id}'))">💬</a>`:''} <button class="btn-sm" onclick="abrirHistTermo('${t.id}')">📋</button> <button class="btn-sm danger" onclick="encerrarTermo('${t.id}')">✕</button>`;
     return `<div class="contract-row" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr 160px">
-      <div><div class="client-name">${t.nome_devedor}</div><div class="client-sub">${t.cnpj_devedor||''}${t.email_devedor?' · '+t.email_devedor:''}</div></div>
+      <div><div class="client-name"><span class="tag-tipo termo">📝 Termo</span>${t.nome_devedor}</div><div class="client-sub">${t.cnpj_devedor||''}${t.email_devedor?' · '+t.email_devedor:''}</div></div>
       <div style="font-size:13px;color:var(--text2)">${fmtData(t.data_envio)}<br><span style="font-size:11px">${dias}d atrás</span></div>
       <div style="font-size:13px;font-weight:600">${t.valor_final||'—'}</div>
       <div>${statusB}</div>
@@ -855,8 +863,20 @@ function waTermoLembrete(t) {
   const fone=(t.whatsapp_devedor||'').replace(/\D/g,'');
   if(!fone){alert('WhatsApp não cadastrado.');return;}
   const numero=fone.startsWith('55')?fone:'55'+fone;
-  const link=t.clicksign_url?'\n\n🔗 Link para assinar:\n'+t.clicksign_url:'';
-  const msg=encodeURIComponent(`Olá ${t.nome_devedor}! 😊\n\nPassando para lembrar que o Termo de Confissão de Dívida está aguardando a sua assinatura.${link}\n\nQualquer dúvida entre em contato.\n\n*Digital+ Web Contabilidade*`);
+  const dias = Math.floor((new Date()-new Date(t.data_envio+'T12:00:00'))/86400000);
+  const link=t.clicksign_url?'\n\n🔗 *Link para assinatura:*\n'+t.clicksign_url:'';
+  const valorTxt = t.valor_final ? `\n\n💰 *Valor renegociado:* ${t.valor_final}` : '';
+  const msg=encodeURIComponent(
+    `Olá ${t.nome_devedor}, tudo bem?\n\n` +
+    `Aqui é a equipe da *Digital+ Web Contabilidade*.\n\n` +
+    `Estou passando para acompanhar a assinatura do *Termo de Confissão e Renegociação de Dívida* que enviamos a você há *${dias} dia(s)*.` +
+    valorTxt +
+    `\n\n⚠ *Importante:* a regularização da pendência *só será considerada efetivada após a sua assinatura*. Enquanto o termo não for assinado, o débito permanece em aberto e a renegociação combinada não tem validade.` +
+    link +
+    `\n\n📧 O link também foi enviado pelo e-mail da Clicksign — verifique caixa de entrada e spam.\n\n` +
+    `Conto com você para finalizarmos. Qualquer dúvida estou à disposição! 🙏\n\n` +
+    `*Digital+ Web Contabilidade*`
+  );
   window.open('https://wa.me/'+numero+'?text='+msg,'_blank');
 }
 
@@ -1344,7 +1364,7 @@ function renderizar() {
 
     return `<div class="contract-row">
       <div>
-        <div class="client-name">${c.nome_cliente}</div>
+        <div class="client-name"><span class="tag-tipo contrato">📄 Contrato</span>${c.nome_cliente}</div>
         <div class="client-sub">${c.razao_social||''} ${c.email_cliente ? '· '+c.email_cliente : ''}</div>
       </div>
       <div style="font-size:13px;color:var(--text2)">${fmtData(c.data_envio)}</div>

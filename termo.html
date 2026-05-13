@@ -930,7 +930,12 @@ async function enviarClicksign() {
   try {
     // Gera o HTML do termo
     const htmlTermo = buildTermoHTML();
-    const b64 = btoa(unescape(encodeURIComponent(htmlTermo)));
+    // Converte UTF-8 para Base64 corretamente (suporta acentos e caracteres especiais)
+    const encoder = new TextEncoder();
+    const bytes = encoder.encode(htmlTermo);
+    let binary = '';
+    bytes.forEach(b => binary += String.fromCharCode(b));
+    const b64 = btoa(binary);
 
     msg.textContent = 'Enviando para a Clicksign...';
 

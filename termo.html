@@ -376,25 +376,7 @@ async function fazerLogout() {
 }
 
 // ── Upload ────────────────────────────────────────────────────────────────────
-function 
-// ── Tema claro/escuro ─────────────────────────────────────────────────────────
-function toggleTema() {
-  const isLight = document.body.classList.toggle('light');
-  localStorage.setItem('tema', isLight ? 'light' : 'dark');
-  const btn = document.getElementById('btn-tema');
-  if (btn) btn.textContent = isLight ? '🌙' : '☀️';
-}
-(function() {
-  if (localStorage.getItem('tema') === 'light') {
-    document.body.classList.add('light');
-    setTimeout(() => {
-      const btn = document.getElementById('btn-tema');
-      if (btn) btn.textContent = '🌙';
-    }, 100);
-  }
-})();
-
-setupUpload(inputId, zoneId, nameId, key) {
+function setupUpload(inputId, zoneId, nameId, key) {
   const input = document.getElementById(inputId);
   const zone  = document.getElementById(zoneId);
   const nameEl = document.getElementById(nameId);
@@ -874,6 +856,24 @@ async function enviarClicksign() {
     btn.disabled = false; btn.textContent = '✦ Enviar pelo Clicksign';
   }
 }
+
+
+// ── Tema claro/escuro ─────────────────────────────────────────────────────────
+function toggleTema() {
+  const isLight = document.body.classList.toggle('light');
+  localStorage.setItem('tema', isLight ? 'light' : 'dark');
+  const btn = document.getElementById('btn-tema');
+  if (btn) btn.textContent = isLight ? '🌙' : '☀️';
+}
+(function() {
+  if (localStorage.getItem('tema') === 'light') {
+    document.body.classList.add('light');
+    setTimeout(() => {
+      const btn = document.getElementById('btn-tema');
+      if (btn) btn.textContent = '🌙';
+    }, 100);
+  }
+})();
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 setupUpload('fcs',   'zone-cs',   'fn-cs',   'cs');

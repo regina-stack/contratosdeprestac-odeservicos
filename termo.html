@@ -946,48 +946,48 @@ async function enviarClicksign() {
     
     await new Promise(r => setTimeout(r, 1000)); // aguarda renderização
     
-    const canvas = await html2canvas(iframe.contentDocument.body, {{
+    const canvas = await html2canvas(iframe.contentDocument.body, {
       scale: 2,
       useCORS: true,
       allowTaint: true,
-      width: 794, // A4 width in px at 96dpi
-    }});
+      width: 794
+    });
     document.body.removeChild(iframe);
-    
+
     const imgData = canvas.toDataURL('image/jpeg', 0.85);
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageW = pdf.internal.pageSize.getWidth();
     const pageH = pdf.internal.pageSize.getHeight();
     const imgH = (canvas.height * pageW) / canvas.width;
-    
+
     let y = 0;
     let remaining = imgH;
-    while (remaining > 0) {{
+    while (remaining > 0) {
       pdf.addImage(imgData, 'JPEG', 0, y > 0 ? -(imgH - remaining) : 0, pageW, imgH);
       remaining -= pageH;
-      if (remaining > 0) {{ pdf.addPage(); y += pageH; }}
-    }}
-    
+      if (remaining > 0) { pdf.addPage(); y += pageH; }
+    }
+
     const pdfBytes = pdf.output('arraybuffer');
     const pdfArray = new Uint8Array(pdfBytes);
     let binary = '';
     pdfArray.forEach(b => binary += String.fromCharCode(b));
     const b64 = btoa(binary);
-    
+
     msg.textContent = 'Enviando para a Clicksign...';
 
-    const resp = await fetch('/api/claude', {{
+    const resp = await fetch('/api/claude', {
       method: 'POST',
-      headers: {{'Content-Type':'application/json'}},
-      body: JSON.stringify({{
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
         action: 'clicksign',
         nomeCliente: nome,
         emailCliente: email,
         whatsappCliente: whats,
         pdfBase64: b64,
         nomeDocumento: 'Termo_Confissao_Divida_' + nome.replace(/\s+/g,'_')
-      }})
-    }});
+      })
+    });
 
     const data = await resp.json();
     if (!resp.ok || data.error) throw new Error(data.error || 'Erro ao enviar');

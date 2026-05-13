@@ -954,6 +954,37 @@ async function enviarClicksign() {
     msg.style.color = 'var(--teal)';
     btn.textContent = '✓ Enviado!';
 
+    // Registra o termo no Supabase
+    try {
+      const hoje = new Date().toISOString().split('T')[0];
+      const valFinal = document.getElementById('p-valor-final')?.value || '';
+      const valTotal = document.getElementById('p-total-atualizado')?.value || '';
+      const cnpj     = document.getElementById('d-cnpj')?.value || '';
+      await fetch('https://rkritsqmaiqyjdonsqqn.supabase.co/rest/v1/termos', {
+        method: 'POST',
+        headers: {
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrcml0c3FtYWlxeWpkb25zcXFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMTY1NzYsImV4cCI6MjA5MTg5MjU3Nn0.uej4YE67KOiL1UZsYaxO2ZD8BOyKL0qBPMrVoFKc-tI',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrcml0c3FtYWlxeWpkb25zcXFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMTY1NzYsImV4cCI6MjA5MTg5MjU3Nn0.uej4YE67KOiL1UZsYaxO2ZD8BOyKL0qBPMrVoFKc-tI',
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation'
+        },
+        body: JSON.stringify({
+          nome_devedor: nome,
+          email_devedor: email,
+          whatsapp_devedor: whats,
+          cnpj_devedor: cnpj,
+          valor_original: valTotal,
+          valor_final: valFinal,
+          data_envio: hoje,
+          status: 'pendente',
+          document_key: data.documentKey || null,
+          clicksign_url: data.signUrl || null
+        })
+      });
+    } catch(supaErr) {
+      console.error('Supabase erro:', supaErr);
+    }
+
     // Botão WhatsApp
     if (whats) {
       const fone = whats.replace(/\D/g,'');

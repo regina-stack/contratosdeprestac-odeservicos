@@ -159,6 +159,8 @@ body.light .total-box{background:rgba(26,143,53,.04);border-color:rgba(26,143,53
 body.light .btn{background:#f0f4f0;color:var(--text2);border-color:var(--border2)}
 body.light select option{background:#ffffff;color:var(--text)}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head><body>
 
 <!-- Topbar -->
@@ -930,28 +932,62 @@ async function enviarClicksign() {
   try {
     // Gera o HTML do termo
     const htmlTermo = buildTermoHTML();
-    // Converte UTF-8 para Base64 corretamente (suporta acentos e caracteres especiais)
-    const encoder = new TextEncoder();
-    const bytes = encoder.encode(htmlTermo);
-    let binary = '';
-    bytes.forEach(b => binary += String.fromCharCode(b));
-    const b64 = btoa(binary);
+    msg.textContent = 'Gerando PDF...';
 
+    // Gera PDF a partir do HTML usando jsPDF + html2canvas
+    const { jsPDF } = window.jspdf;
+    
+    // Cria iframe oculto para renderizar o HTML
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:210mm;height:297mm;border:none';
+    document.body.appendChild(iframe);
+    iframe.contentDocument.write(htmlTermo);
+    iframe.contentDocument.close();
+    
+    await new Promise(r => setTimeout(r, 1000)); // aguarda renderização
+    
+    const canvas = await html2canvas(iframe.contentDocument.body, {{
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      width: 794, // A4 width in px at 96dpi
+    }});
+    document.body.removeChild(iframe);
+    
+    const imgData = canvas.toDataURL('image/jpeg', 0.85);
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const imgH = (canvas.height * pageW) / canvas.width;
+    
+    let y = 0;
+    let remaining = imgH;
+    while (remaining > 0) {{
+      pdf.addImage(imgData, 'JPEG', 0, y > 0 ? -(imgH - remaining) : 0, pageW, imgH);
+      remaining -= pageH;
+      if (remaining > 0) {{ pdf.addPage(); y += pageH; }}
+    }}
+    
+    const pdfBytes = pdf.output('arraybuffer');
+    const pdfArray = new Uint8Array(pdfBytes);
+    let binary = '';
+    pdfArray.forEach(b => binary += String.fromCharCode(b));
+    const b64 = btoa(binary);
+    
     msg.textContent = 'Enviando para a Clicksign...';
 
-    const resp = await fetch('/api/claude', {
+    const resp = await fetch('/api/claude', {{
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
+      headers: {{'Content-Type':'application/json'}},
+      body: JSON.stringify({{
         action: 'clicksign',
         nomeCliente: nome,
         emailCliente: email,
         whatsappCliente: whats,
         pdfBase64: b64,
-        conteudoTipo: 'text/html',
         nomeDocumento: 'Termo_Confissao_Divida_' + nome.replace(/\s+/g,'_')
-      })
-    });
+      }})
+    }});
 
     const data = await resp.json();
     if (!resp.ok || data.error) throw new Error(data.error || 'Erro ao enviar');

@@ -308,7 +308,7 @@ body.light select option{background:#ffffff;color:var(--text)}
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:.75rem;align-items:end">
           <div class="fg" style="margin:0">
             <label>Nº de parcelas</label>
-            <input type="number" id="gen-qtd" min="1" max="60" value="3" placeholder="Ex: 6">
+            <input type="number" id="gen-qtd" min="1" max="60" value="3" placeholder="Ex: 6" oninput="calcularValorParcela()">
           </div>
           <div class="fg" style="margin:0">
             <label>Valor de cada parcela</label>
@@ -499,7 +499,7 @@ function goStep(n) {
     if (i === n) s.classList.add('active');
   });
   document.getElementById('p'+n).classList.add('show');
-  if (n === 3) preencherTotalStep3();
+  if (n === 3) { preencherTotalStep3(); setTimeout(calcularValorParcela, 100); }
   if (n === 4) buildResumoTermo();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -587,21 +587,47 @@ function calcularTotais() {
 
 // ── Parcelas ─────────────────────────────────────────────────────────────────
 let parcelaCount = 0;
+
+// ── Calcula valor da parcela automaticamente ──────────────────────────────────
+function calcularValorParcela() {
+  const qtd      = parseInt(document.getElementById('gen-qtd')?.value) || 1;
+  const valFinal = parseVal(document.getElementById('p-valor-final')?.value || '');
+  const genValor = document.getElementById('gen-valor');
+  if (genValor && valFinal > 0) {
+    genValor.value = fmtVal(valFinal / qtd);
+  }
+}
+
 function gerarParcelas() {
   const qtd   = parseInt(document.getElementById('gen-qtd')?.value) || 1;
-  const valor = document.getElementById('gen-valor')?.value?.trim() || '';
-  const venc1 = document.getElementById('gen-venc1')?.value?.trim() || '';
   const forma = document.getElementById('gen-forma')?.value?.trim() || 'Pix';
+  const venc1 = document.getElementById('gen-venc1')?.value?.trim() || '';
 
   if (!venc1) { alert('Informe a data do 1º vencimento.'); return; }
+
+  // Calcula valor automaticamente a partir do valor final renegociado
+  let valorParcela = parseVal(document.getElementById('gen-valor')?.value || '');
+  if (!valorParcela) {
+    const valFinal = parseVal(document.getElementById('p-valor-final')?.value || '');
+    if (valFinal > 0) {
+      valorParcela = valFinal / qtd;
+    }
+  }
+  const valorFmt = valorParcela > 0 ? fmtVal(valorParcela) : '';
+
+  // Atualiza o campo de valor com o calculado
+  const genValorEl = document.getElementById('gen-valor');
+  if (genValorEl && !genValorEl.value && valorFmt) {
+    genValorEl.value = valorFmt;
+  }
+
+  // Converte data dd/mm/aaaa
+  const [d, m, y] = venc1.split('/').map(Number);
+  if (!d || !m || !y) { alert('Data inválida. Use o formato dd/mm/aaaa'); return; }
 
   // Limpa parcelas existentes
   document.getElementById('parcelas-tbody').innerHTML = '';
   parcelaCount = 0;
-
-  // Converte data dd/mm/aaaa para Date
-  const [d, m, y] = venc1.split('/').map(Number);
-  if (!d || !m || !y) { alert('Data inválida. Use o formato dd/mm/aaaa'); return; }
 
   for (let i = 0; i < qtd; i++) {
     const data = new Date(y, m - 1 + i, d);
@@ -610,7 +636,7 @@ function gerarParcelas() {
     const yyyy = data.getFullYear();
     const dataFmt = dd + '/' + mm + '/' + yyyy;
     const nome = i === 0 ? 'Entrada' : i + 'ª parcela';
-    addParcelaRow(nome, dataFmt, valor, forma);
+    addParcelaRow(nome, dataFmt, valorFmt, forma);
   }
 }
 

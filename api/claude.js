@@ -31,7 +31,7 @@ export default async function handler(req, res) {
     if (!token) return res.status(500).json({ error: 'CLICKSIGN_TOKEN não configurado na Vercel.' });
 
     const BASE = 'https://app.clicksign.com/api/v1';
-    const { pdfBase64, nomeCliente, cpfCliente, emailCliente, whatsappCliente, nomeDocumento } = req.body;
+    const { pdfBase64, nomeCliente, cpfCliente, emailCliente, whatsappCliente, nomeDocumento, conteudoTipo } = req.body;
 
     try {
       // PASSO 1: Upload do documento (PDF em base64)
@@ -40,8 +40,8 @@ export default async function handler(req, res) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           document: {
-            path: `/${nomeDocumento || 'Contrato'}_${Date.now()}.pdf`,
-            content_base64: `data:application/pdf;base64,${pdfBase64}`,
+            path: `/${nomeDocumento || 'Contrato'}_${Date.now()}${conteudoTipo === 'text/html' ? '.html' : '.pdf'}`,
+            content_base64: `data:${conteudoTipo || 'application/pdf'};base64,${pdfBase64}`,
             deadline_at: null,
             auto_close: true,
             locale: 'pt-BR',

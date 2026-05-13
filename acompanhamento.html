@@ -161,6 +161,13 @@ body.light .filter-btn{background:#f0f4f0;color:var(--text2)}
 body.light .import-item{background:#f0f4f0}
 body.light .hist-item{background:#f0f4f0}
 body.light select option{background:#ffffff;color:var(--text)}
+
+/* Seções do painel */
+.secao{display:none}.secao.show{display:block}
+.nav-link.secao-ativa{background:rgba(57,231,95,.08);border-color:var(--border2);color:var(--green)}
+/* Badge termo */
+.badge-termo-pend{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(245,158,11,.1);color:var(--amber)}
+.badge-termo-assinou{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(6,214,160,.1);color:var(--teal)}
 </style>
 </head>
 <body>
@@ -172,6 +179,7 @@ body.light select option{background:#ffffff;color:var(--text)}
     <a href="/index.html" class="nav-link"><span class="nav-icon">📄</span>Gerar contrato</a>
     <a href="/termo.html" class="nav-link"><span class="nav-icon">📝</span>Termo de dívida</a>
   <a href="/acompanhamento.html" class="nav-link active"><span class="nav-icon">📋</span>Acompanhamento</a>
+    <a href="#" class="nav-link" id="nav-termos" onclick="mostrarSecao('termos');return false"><span class="nav-icon">📝</span>Termos de Dívida</a>
   
     <a href="/usuarios.html" class="nav-link" id="nav-usuarios" style="display:none"><span class="nav-icon">👥</span>Usuários</a>
     <button onclick="toggleTema()" id="btn-tema" style="background:none;border:1px solid var(--border2);color:var(--text2);padding:8px 12px;border-radius:8px;cursor:pointer;font-size:13px;width:100%;text-align:left;display:flex;align-items:center;gap:8px;margin-bottom:4px;font-family:'Inter',sans-serif;transition:all .15s" title="Alternar tema"><span id="tema-icon">☀️</span>Tema claro/escuro</button>
@@ -179,7 +187,8 @@ body.light select option{background:#ffffff;color:var(--text)}
   </div>
 
   <div class="main">
-    <div class="page-header">
+    <div class="secao show" id="secao-contratos">
+  <div class="page-header">
       <div>
         <div class="page-title">Acompanhamento de contratos</div>
         <div class="page-sub">Contratos pendentes de assinatura — atualização em tempo real</div>
@@ -188,7 +197,7 @@ body.light select option{background:#ffffff;color:var(--text)}
         <button class="btn-import" onclick="exportarRelatorio()" style="border-color:var(--teal);color:var(--teal)">📊 Exportar CSV</button>
         <button class="btn-import" onclick="abrirModalImport()">⬇ Importar da Clicksign</button>
         <button class="btn-import" onclick="abrirWhatsLote()" style="border-color:#25d366;color:#25d366">📵 Add WhatsApp</button>
-        <button class="btn-add" onclick="abrirModalNovo()">+ Adicionar contrato</button>
+        <button class="btn-add" onclick="abrirModalNovo()" id="btn-novo-contrato">+ Adicionar contrato</button>
       </div>
     </div>
 
@@ -233,6 +242,112 @@ body.light select option{background:#ffffff;color:var(--text)}
   </div>
 </div>
 
+
+</div><!-- /secao-contratos -->
+
+
+<!-- ══ SEÇÃO: TERMOS DE DÍVIDA ══════════════════════════════════════════════ -->
+<div class="secao" id="secao-termos">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Termos de Dívida</div>
+      <div class="page-sub">Acompanhamento de termos de confissão de dívida enviados para assinatura</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <a href="/termo.html" class="btn-add" style="text-decoration:none">+ Novo termo</a>
+    </div>
+  </div>
+
+  <!-- Stats termos -->
+  <div class="stats" style="grid-template-columns:repeat(3,1fr)">
+    <div class="stat"><div class="stat-label">Total pendentes</div><div class="stat-value amber" id="tstat-pendentes">—</div></div>
+    <div class="stat"><div class="stat-label">Assinados</div><div class="stat-value teal" id="tstat-assinados">—</div></div>
+    <div class="stat"><div class="stat-label">⚠ Falta salvar Drive</div><div class="stat-value red" id="tstat-drive">—</div></div>
+  </div>
+
+  <!-- Filtros termos -->
+  <div class="filters">
+    <button class="filter-btn active" onclick="filtrarTermos('pendentes',this)">⏳ Pendentes</button>
+    <button class="filter-btn" onclick="filtrarTermos('assinados',this)">✅ Assinados</button>
+    <button class="filter-btn" onclick="filtrarTermos('drive_pendente',this)">⚠ Falta salvar no Drive</button>
+    <button class="filter-btn" onclick="filtrarTermos('todos',this)">Todos</button>
+  </div>
+
+  <!-- Tabela termos -->
+  <div class="table-wrap">
+    <div class="table-head" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr 160px">
+      <div>Devedor</div>
+      <div>Enviado em</div>
+      <div>Valor final</div>
+      <div>Status</div>
+      <div>Drive</div>
+      <div>Ações</div>
+    </div>
+    <div id="lista-termos">
+      <div class="loading"><span class="spin"></span>Carregando termos...</div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Registrar contato no termo -->
+<div class="modal-bg" id="modal-contato-termo">
+  <div class="modal-box">
+    <button class="modal-close" onclick="fecharModal('modal-contato-termo')">✕</button>
+    <div class="modal-title" id="mct-titulo">Registrar contato</div>
+    <div class="fg"><label>Como foi o contato?</label>
+      <select id="mct-resultado">
+        <option value="sem-resposta">Sem resposta</option>
+        <option value="prometeu">Prometeu assinar</option>
+        <option value="pediu-prazo">Pediu mais prazo</option>
+        <option value="recusou">Recusou assinar</option>
+        <option value="assinou">Assinou ✅</option>
+      </select>
+    </div>
+    <div class="fg"><label>Canal utilizado</label>
+      <select id="mct-canal">
+        <option value="WhatsApp">WhatsApp</option>
+        <option value="E-mail">E-mail</option>
+        <option value="Telefone">Telefone</option>
+      </select>
+    </div>
+    <div class="fg"><label>Feito por</label><input type="text" id="mct-feito" placeholder="Nome da atendente"></div>
+    <div class="fg"><label>Observação</label><textarea id="mct-obs" placeholder="Ex: Cliente disse que vai assinar até sexta..."></textarea></div>
+    <div class="msg-status" id="msg-ct"></div>
+    <button class="btn-full" onclick="salvarContatoTermo()">Registrar</button>
+    <button class="btn-outline" onclick="fecharModal('modal-contato-termo')">Cancelar</button>
+  </div>
+</div>
+
+<!-- Modal: Histórico do termo -->
+<div class="modal-bg" id="modal-hist-termo">
+  <div class="modal-box">
+    <button class="modal-close" onclick="fecharModal('modal-hist-termo')">✕</button>
+    <div class="modal-title" id="mht-titulo">Histórico</div>
+    <div id="mht-lista"></div>
+  </div>
+</div>
+
+<!-- Modal: Adicionar termo manualmente -->
+<div class="modal-bg" id="modal-novo-termo">
+  <div class="modal-box">
+    <button class="modal-close" onclick="fecharModal('modal-novo-termo')">✕</button>
+    <div class="modal-title">Adicionar termo manualmente</div>
+    <div class="fg"><label>Nome do devedor</label><input type="text" id="nt-nome" placeholder="Nome completo ou razão social"></div>
+    <div class="row2">
+      <div class="fg"><label>E-mail</label><input type="email" id="nt-email" placeholder="email@devedor.com"></div>
+      <div class="fg"><label>WhatsApp</label><input type="text" id="nt-whats" placeholder="31 99999-9999"></div>
+    </div>
+    <div class="row2">
+      <div class="fg"><label>CNPJ/CPF</label><input type="text" id="nt-cnpj" placeholder="00.000.000/0001-00"></div>
+      <div class="fg"><label>Valor final renegociado</label><input type="text" id="nt-valor" placeholder="R$ 0,00"></div>
+    </div>
+    <div class="fg"><label>Data de envio</label><input type="date" id="nt-envio"></div>
+    <div class="fg"><label>Observação</label><textarea id="nt-obs" placeholder="Detalhes da renegociação..."></textarea></div>
+    <div class="msg-status" id="msg-nt"></div>
+    <button class="btn-full" onclick="salvarNovoTermo()">✦ Adicionar termo</button>
+    <button class="btn-outline" onclick="fecharModal('modal-novo-termo')">Cancelar</button>
+  </div>
+</div>
 
 <!-- Modal: Importar da Clicksign -->
 <div class="modal-bg" id="modal-import">
@@ -596,6 +711,171 @@ function toggleTema() {
     }, 200);
   }
 })();
+
+
+// ══ TERMOS DE DÍVIDA ═══════════════════════════════════════════════════════════
+let todosTermos = [];
+let filtroTermos = 'pendentes';
+let termoSelecionado = null;
+
+function mostrarSecao(secao) {
+  const sc = document.getElementById('secao-contratos');
+  const st = document.getElementById('secao-termos');
+  if(sc) sc.classList.toggle('show', secao==='contratos');
+  if(st) st.classList.toggle('show', secao==='termos');
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('secao-ativa'));
+  if (secao==='termos') {
+    const el = document.getElementById('nav-termos');
+    if(el) el.classList.add('secao-ativa');
+    carregarTermos();
+  }
+}
+
+function supaFetchTermos(path, opts={}) {
+  return fetch('https://rkritsqmaiqyjdonsqqn.supabase.co/rest/v1/' + path, {
+    ...opts,
+    headers: { 'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrcml0c3FtYWlxeWpkb25zcXFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMTY1NzYsImV4cCI6MjA5MTg5MjU3Nn0.uej4YE67KOiL1UZsYaxO2ZD8BOyKL0qBPMrVoFKc-tI','Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrcml0c3FtYWlxeWpkb25zcXFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMTY1NzYsImV4cCI6MjA5MTg5MjU3Nn0.uej4YE67KOiL1UZsYaxO2ZD8BOyKL0qBPMrVoFKc-tI','Content-Type':'application/json','Prefer':opts.prefer||'return=representation',...(opts.headers||{}) }
+  });
+}
+
+async function carregarTermos() {
+  try {
+    const resp = await supaFetchTermos('termos?select=*,contatos_termos(*)&order=created_at.desc');
+    const data = await resp.json();
+    todosTermos = data.map(t => ({...t, historico:(t.contatos_termos||[]).sort((a,b)=>a.data_contato.localeCompare(b.data_contato))}) );
+    renderizarTermos();
+  } catch(e) {
+    const el = document.getElementById('lista-termos');
+    if(el) el.innerHTML = `<div class="empty">Erro: ${e.message}</div>`;
+  }
+}
+
+function filtrarTermos(tipo, btn) {
+  filtroTermos = tipo;
+  document.querySelectorAll('#secao-termos .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderizarTermos();
+}
+
+function renderizarTermos() {
+  const pend = todosTermos.filter(t=>t.status==='pendente');
+  const assn = todosTermos.filter(t=>t.status==='assinou');
+  const setS = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+  setS('tstat-pendentes', pend.length);
+  setS('tstat-assinados', assn.length);
+  setS('tstat-drive', assn.filter(t=>!t.salvo_drive).length);
+
+  let lista = [...todosTermos];
+  if (filtroTermos==='pendentes')     lista = lista.filter(t=>t.status==='pendente');
+  if (filtroTermos==='assinados')     lista = lista.filter(t=>t.status==='assinou');
+  if (filtroTermos==='drive_pendente') lista = lista.filter(t=>t.status==='assinou'&&!t.salvo_drive);
+
+  const el = document.getElementById('lista-termos');
+  if (!lista.length) { el.innerHTML='<div class="empty">Nenhum termo encontrado.</div>'; return; }
+
+  el.innerHTML = lista.map(t => {
+    const dias = Math.floor((new Date()-new Date(t.data_envio+'T12:00:00'))/86400000);
+    const statusB = t.status==='assinou'
+      ? '<span class="badge-assinado">✅ Assinado</span>'
+      : '<span style="padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;background:rgba(245,158,11,.1);color:var(--amber)">⏳ Aguardando</span>';
+    const driveB = t.status==='assinou'
+      ? (t.salvo_drive
+          ? `<button class="badge-drive-ok" onclick="toggleDriveTermo('${t.id}',true)">✓ Drive</button>`
+          : `<button class="badge-drive-nok" onclick="toggleDriveTermo('${t.id}',false)">⚠ Drive</button>`)
+      : '—';
+    const acoes = t.status==='assinou'
+      ? `${t.document_key?`<button class="btn-sm primary" onclick="baixarPDF('${t.document_key}','${t.nome_devedor}')">⬇ PDF</button>`:''} ${driveB} <button class="btn-sm" onclick="abrirHistTermo('${t.id}')">📋</button> <button class="btn-sm danger" onclick="encerrarTermo('${t.id}')">✕</button>`
+      : `<button class="btn-sm primary" onclick="abrirContatoTermo('${t.id}')">📞</button> ${t.whatsapp_devedor?`<a class="btn-wa" href="javascript:void(0)" onclick="waTermoLembrete(todosTermos.find(x=>x.id==='${t.id}'))">💬</a>`:''} <button class="btn-sm" onclick="abrirHistTermo('${t.id}')">📋</button> <button class="btn-sm danger" onclick="encerrarTermo('${t.id}')">✕</button>`;
+    return `<div class="contract-row" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr 160px">
+      <div><div class="client-name">${t.nome_devedor}</div><div class="client-sub">${t.cnpj_devedor||''}${t.email_devedor?' · '+t.email_devedor:''}</div></div>
+      <div style="font-size:13px;color:var(--text2)">${fmtData(t.data_envio)}<br><span style="font-size:11px">${dias}d atrás</span></div>
+      <div style="font-size:13px;font-weight:600">${t.valor_final||'—'}</div>
+      <div>${statusB}</div>
+      <div>${driveB}</div>
+      <div class="row-actions">${acoes}</div>
+    </div>`;
+  }).join('');
+}
+
+async function toggleDriveTermo(id, atual) {
+  const {data:{session}} = await window._sb.auth.getSession();
+  await supaFetchTermos(`termos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({salvo_drive:!atual,salvo_drive_por:!atual?(session?.user?.email||''):null,salvo_drive_em:!atual?new Date().toISOString():null})});
+  carregarTermos();
+}
+
+function abrirContatoTermo(id) {
+  termoSelecionado = id;
+  const t = todosTermos.find(x=>x.id===id);
+  const el = document.getElementById('mct-titulo');
+  if(el) el.textContent = `Registrar contato — ${t.nome_devedor}`;
+  ['mct-obs'].forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});
+  document.getElementById('mct-resultado').value='sem-resposta';
+  document.getElementById('mct-canal').value='WhatsApp';
+  document.getElementById('mct-feito').value=nomeAtendente||'';
+  document.getElementById('msg-ct').textContent='';
+  document.getElementById('modal-contato-termo').classList.add('open');
+}
+
+async function salvarContatoTermo() {
+  const resultado=document.getElementById('mct-resultado').value;
+  const canal=document.getElementById('mct-canal').value;
+  const feito=document.getElementById('mct-feito').value.trim();
+  const obs=document.getElementById('mct-obs').value.trim();
+  const msg=document.getElementById('msg-ct');
+  const hoje=new Date().toISOString().split('T')[0];
+  msg.textContent='Salvando...';msg.style.color='var(--green)';
+  await supaFetchTermos('contatos_termos',{method:'POST',body:JSON.stringify({termo_id:termoSelecionado,data_contato:hoje,resultado,canal,observacao:obs,feito_por:feito})});
+  if (resultado==='assinou') await supaFetchTermos(`termos?id=eq.${termoSelecionado}`,{method:'PATCH',body:JSON.stringify({status:'assinou'})});
+  msg.textContent='✅ Registrado!';
+  setTimeout(()=>{fecharModal('modal-contato-termo');carregarTermos();},700);
+}
+
+function abrirHistTermo(id) {
+  const t=todosTermos.find(x=>x.id===id);
+  document.getElementById('mht-titulo').textContent=`Histórico — ${t.nome_devedor}`;
+  const labels={'sem-resposta':'Sem resposta','prometeu':'Prometeu assinar','pediu-prazo':'Pediu prazo','recusou':'Recusou','assinou':'Assinou ✅'};
+  const hist=[...(t.historico||[])].reverse();
+  document.getElementById('mht-lista').innerHTML=hist.length
+    ?hist.map(h=>`<div class="hist-item"><div class="hist-date">${fmtData(h.data_contato)} · ${h.canal||''}${h.feito_por?' · '+h.feito_por:''}</div><div class="hist-tipo">${labels[h.resultado]||h.resultado}</div>${h.observacao?`<div class="hist-obs">${h.observacao}</div>`:''}</div>`).join('')
+    :'<p style="color:var(--text2);font-size:13px">Nenhum contato registrado.</p>';
+  document.getElementById('modal-hist-termo').classList.add('open');
+}
+
+async function encerrarTermo(id) {
+  const t=todosTermos.find(x=>x.id===id);
+  if(!confirm(`Encerrar o termo de ${t.nome_devedor}?`)) return;
+  await supaFetchTermos(`termos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({status:'encerrado'})});
+  if(t.document_key) {
+    try { await fetch('/api/claude',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'clicksign_cancelar',documentKey:t.document_key})}); } catch(e){}
+  }
+  carregarTermos();
+}
+
+function waTermoLembrete(t) {
+  if(!t) return;
+  const fone=(t.whatsapp_devedor||'').replace(/\D/g,'');
+  if(!fone){alert('WhatsApp não cadastrado.');return;}
+  const numero=fone.startsWith('55')?fone:'55'+fone;
+  const link=t.clicksign_url?'\n\n🔗 Link para assinar:\n'+t.clicksign_url:'';
+  const msg=encodeURIComponent(`Olá ${t.nome_devedor}! 😊\n\nPassando para lembrar que o Termo de Confissão de Dívida está aguardando a sua assinatura.${link}\n\nQualquer dúvida entre em contato.\n\n*Digital+ Web Contabilidade*`);
+  window.open('https://wa.me/'+numero+'?text='+msg,'_blank');
+}
+
+async function salvarNovoTermo() {
+  const nome=document.getElementById('nt-nome')?.value?.trim();
+  const email=document.getElementById('nt-email')?.value?.trim();
+  const whats=document.getElementById('nt-whats')?.value?.trim();
+  const cnpj=document.getElementById('nt-cnpj')?.value?.trim();
+  const valor=document.getElementById('nt-valor')?.value?.trim();
+  const envio=document.getElementById('nt-envio')?.value;
+  const obs=document.getElementById('nt-obs')?.value?.trim();
+  const msg=document.getElementById('msg-nt');
+  if(!nome){msg.textContent='⚠ Informe o nome.';msg.style.color='var(--amber)';return;}
+  msg.textContent='Salvando...';msg.style.color='var(--green)';
+  const resp=await supaFetchTermos('termos',{method:'POST',body:JSON.stringify({nome_devedor:nome,email_devedor:email,whatsapp_devedor:whats,cnpj_devedor:cnpj,valor_final:valor,data_envio:envio,status:'pendente',observacao:obs})});
+  if(resp.ok){msg.textContent='✅ Termo adicionado!';setTimeout(()=>{fecharModal('modal-novo-termo');carregarTermos();},700);}
+  else{msg.textContent='❌ Erro ao salvar.';msg.style.color='var(--red)';}
+}
 
 const SUPA_URL = 'https://rkritsqmaiqyjdonsqqn.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrcml0c3FtYWlxeWpkb25zcXFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzMTY1NzYsImV4cCI6MjA5MTg5MjU3Nn0.uej4YE67KOiL1UZsYaxO2ZD8BOyKL0qBPMrVoFKc-tI';

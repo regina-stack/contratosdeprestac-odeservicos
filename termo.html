@@ -483,17 +483,16 @@ function goStep(n) {
 // ── Débitos ───────────────────────────────────────────────────────────────────
 function addDebitoRow(d={}) {
   const tbody = document.getElementById('debitos-tbody');
-  const i = tbody.children.length;
   const tr = document.createElement('tr');
   tr.innerHTML = `
-    <td><input type="text" placeholder="Ref." value="${d.ref||''}" onchange="calcularTotais()"></td>
+    <td><input type="text" placeholder="Ref." value="${d.ref||''}" oninput="calcularTotais()"></td>
     <td><input type="text" placeholder="Mês/Ano" value="${d.comp||''}" style="min-width:80px"></td>
     <td><input type="text" placeholder="dd/mm/aaaa" value="${d.venc||''}" style="min-width:90px"></td>
-    <td><input type="text" placeholder="0,00" value="${d.orig||''}" class="val-orig" oninput="calcularTotais()"></td>
-    <td><input type="text" placeholder="0,00" value="${d.multa||''}" class="val-multa" oninput="calcularTotais()"></td>
-    <td><input type="text" placeholder="0,00" value="${d.juros||''}" class="val-juros" oninput="calcularTotais()"></td>
-    <td><input type="text" placeholder="0,00" value="${d.corr||''}" class="val-corr" oninput="calcularTotais()"></td>
-    <td><input type="text" placeholder="0,00" value="${d.atual||''}" class="val-atual" oninput="calcularTotais()"></td>
+    <td><input type="text" data-col="orig" placeholder="0,00" value="${d.orig||''}" oninput="calcularTotais()"></td>
+    <td><input type="text" data-col="multa" placeholder="0,00" value="${d.multa||''}" oninput="calcularTotais()"></td>
+    <td><input type="text" data-col="juros" placeholder="0,00" value="${d.juros||''}" oninput="calcularTotais()"></td>
+    <td><input type="text" data-col="corr" placeholder="0,00" value="${d.corr||''}" oninput="calcularTotais()"></td>
+    <td><input type="text" data-col="atual" placeholder="0,00" value="${d.atual||''}" oninput="calcularTotais()"></td>
     <td><button class="btn-del-row" onclick="this.closest('tr').remove();calcularTotais()">✕</button></td>`;
   tbody.appendChild(tr);
   calcularTotais();
@@ -523,22 +522,31 @@ function fmtVal(n) {
 }
 
 function calcularTotais() {
-  let orig=0,multa=0,juros=0,corr=0,atual=0;
+  let orig=0, multa=0, juros=0, corr=0, atual=0;
+
   document.querySelectorAll('#debitos-tbody tr').forEach(tr => {
-    const inputs = tr.querySelectorAll('input');
-    const o = parseVal(inputs[3]?.value);
-    const m = parseVal(inputs[4]?.value);
-    const j = parseVal(inputs[5]?.value);
-    const c = parseVal(inputs[6]?.value);
-    const aInput = inputs[7]?.value?.trim();
-    // Usa o valor digitado ou soma os campos
-    const a = aInput ? parseVal(aInput) : (o + m + j + c);
+    const get = col => parseVal(tr.querySelector('[data-col="'+col+'"]')?.value || '0');
+    const o = get('orig');
+    const m = get('multa');
+    const j = get('juros');
+    const c = get('corr');
+    const soma = o + m + j + c;
+
     // Auto-preenche valor atualizado se vazio
-    if (inputs[7] && !aInput && (o+m+j+c) > 0) {
-      inputs[7].value = (o+m+j+c).toFixed(2).replace('.',',');
+    const atualEl = tr.querySelector('[data-col="atual"]');
+    const aRaw = atualEl?.value?.trim();
+    if (atualEl && !aRaw && soma > 0) {
+      atualEl.value = soma.toFixed(2).replace('.', ',');
     }
-    orig+=o; multa+=m; juros+=j; corr+=c; atual+=a;
+    const a = aRaw ? parseVal(aRaw) : soma;
+
+    orig  += o;
+    multa += m;
+    juros += j;
+    corr  += c;
+    atual += a;
   });
+
   document.getElementById('tot-original').textContent   = fmtVal(orig);
   document.getElementById('tot-multa').textContent      = fmtVal(multa);
   document.getElementById('tot-juros').textContent      = fmtVal(juros);

@@ -33,6 +33,44 @@ export default async function handler(req, res) {
     const BASE = 'https://app.clicksign.com/api/v1';
     const { pdfBase64, nomeCliente, cpfCliente, emailCliente, whatsappCliente, nomeDocumento, conteudoTipo } = req.body;
 
+    // Usa o base64 direto (frontend já converte para PDF)
+    let finalBase64 = pdfBase64;
+    let finalPath = `/${nomeDocumento || 'Documento'}_${Date.now()}.pdf`;
+    
+    if (conteudoTipo === 'text/html') {
+      try {
+        // Usa API de conversão HTML->PDF (gotenberg ou similar)
+        const htmlContent = Buffer.from(pdfBase64, 'base64').toString('utf-8');
+        
+        // Tenta converter via API externa
+        const pdfApiResp = await fetch('https://api.html2pdf.app/v1/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            html: htmlContent,
+            apiKey: 'demo' // API gratuita com limitações
+          })
+        });
+        
+        if (pdfApiResp.ok) {
+          const pdfBuffer = await pdfApiResp.arrayBuffer();
+          finalBase64 = Buffer.from(pdfBuffer).toString('base64');
+        } else {
+          // Fallback: envia como texto (.txt)
+          finalPath = `/${nomeDocumento || 'Documento'}_${Date.now()}.txt`;
+          const textContent = htmlContent.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+          finalBase64 = Buffer.from(textContent).toString('base64');
+        }
+      } catch(convErr) {
+        console.error('Conversão HTML->PDF falhou:', convErr.message);
+        // Fallback: txt
+        finalPath = `/${nomeDocumento || 'Documento'}_${Date.now()}.txt`;
+        const htmlContent = Buffer.from(pdfBase64, 'base64').toString('utf-8');
+        const textContent = htmlContent.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+        finalBase64 = Buffer.from(textContent).toString('base64');
+      }
+    }
+
     try {
       // PASSO 1: Upload do documento (PDF em base64)
       const uploadRes = await fetch(`${BASE}/documents?access_token=${token}`, {
@@ -40,8 +78,8 @@ export default async function handler(req, res) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           document: {
-            path: `/${nomeDocumento || 'Contrato'}_${Date.now()}${conteudoTipo === 'text/html' ? '.html' : '.pdf'}`,
-            content_base64: `data:${conteudoTipo || 'application/pdf'};base64,${pdfBase64}`,
+            path: finalPath,
+            content_base64: `data:application/pdf;base64,${finalBase64}`,
             deadline_at: null,
             auto_close: true,
             locale: 'pt-BR',

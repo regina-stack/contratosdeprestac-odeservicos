@@ -302,6 +302,30 @@ body.light select option{background:#ffffff;color:var(--text)}
       </div>
 
       <p class="sec">Cronograma de parcelamento</p>
+      <!-- Gerador automático -->
+      <div style="background:rgba(57,231,95,.04);border:1px solid rgba(57,231,95,.12);border-radius:10px;padding:1rem 1.25rem;margin-bottom:1rem">
+        <p style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:.75rem">⚡ Gerar parcelas automaticamente</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:.75rem;align-items:end">
+          <div class="fg" style="margin:0">
+            <label>Nº de parcelas</label>
+            <input type="number" id="gen-qtd" min="1" max="60" value="3" placeholder="Ex: 6">
+          </div>
+          <div class="fg" style="margin:0">
+            <label>Valor de cada parcela</label>
+            <input type="text" id="gen-valor" placeholder="Ex: R$ 500,00">
+          </div>
+          <div class="fg" style="margin:0">
+            <label>Venc. da 1ª parcela</label>
+            <input type="text" id="gen-venc1" placeholder="dd/mm/aaaa">
+          </div>
+          <div class="fg" style="margin:0">
+            <label>Forma de pagamento</label>
+            <input type="text" id="gen-forma" value="Pix" placeholder="Pix, Boleto...">
+          </div>
+          <button onclick="gerarParcelas()" style="padding:8px 16px;background:var(--green);color:#0a0f0d;border:none;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer;font-family:'Exo 2',sans-serif;white-space:nowrap;height:36px">Gerar</button>
+        </div>
+        <p style="font-size:11px;color:var(--text2);margin-top:.5rem">💡 As datas seguem mensalmente a partir do 1º vencimento. Você pode editar qualquer parcela depois.</p>
+      </div>
       <div style="overflow-x:auto">
         <table class="parcelas-table" id="parcelas-table">
           <thead>
@@ -563,6 +587,33 @@ function calcularTotais() {
 
 // ── Parcelas ─────────────────────────────────────────────────────────────────
 let parcelaCount = 0;
+function gerarParcelas() {
+  const qtd   = parseInt(document.getElementById('gen-qtd')?.value) || 1;
+  const valor = document.getElementById('gen-valor')?.value?.trim() || '';
+  const venc1 = document.getElementById('gen-venc1')?.value?.trim() || '';
+  const forma = document.getElementById('gen-forma')?.value?.trim() || 'Pix';
+
+  if (!venc1) { alert('Informe a data do 1º vencimento.'); return; }
+
+  // Limpa parcelas existentes
+  document.getElementById('parcelas-tbody').innerHTML = '';
+  parcelaCount = 0;
+
+  // Converte data dd/mm/aaaa para Date
+  const [d, m, y] = venc1.split('/').map(Number);
+  if (!d || !m || !y) { alert('Data inválida. Use o formato dd/mm/aaaa'); return; }
+
+  for (let i = 0; i < qtd; i++) {
+    const data = new Date(y, m - 1 + i, d);
+    const dd   = String(data.getDate()).padStart(2, '0');
+    const mm   = String(data.getMonth() + 1).padStart(2, '0');
+    const yyyy = data.getFullYear();
+    const dataFmt = dd + '/' + mm + '/' + yyyy;
+    const nome = i === 0 ? 'Entrada' : i + 'ª parcela';
+    addParcelaRow(nome, dataFmt, valor, forma);
+  }
+}
+
 function addParcelaRow(nome='', venc='', valor='', forma='Pix') {
   const tbody = document.getElementById('parcelas-tbody');
   parcelaCount++;
@@ -922,10 +973,8 @@ function toggleTema() {
 setupUpload('fcs',   'zone-cs',   'fn-cs',   'cs');
 setupUpload('fcnpj', 'zone-cnpj', 'fn-cnpj', 'cnpj');
 
-// Adiciona linha inicial na tabela de débitos e parcelas
+// Adiciona linha inicial na tabela de débitos
 addDebitoRow();
-addParcelaRow('Entrada');
-addParcelaRow('1ª parcela');
 
 // Aplica tema salvo
 (function(){ if(localStorage.getItem('tema')==='light') document.body.classList.add('light'); })();

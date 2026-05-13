@@ -947,7 +947,8 @@ async function enviarClicksign() {
         nomeCliente: nome,
         emailCliente: email,
         whatsappCliente: whats,
-        htmlBase64: b64,
+        pdfBase64: b64,
+        conteudoTipo: 'text/html',
         nomeDocumento: 'Termo_Confissao_Divida_' + nome.replace(/\s+/g,'_')
       })
     });

@@ -501,7 +501,22 @@ function addDebitoRow(d={}) {
 
 function parseVal(s) {
   if (!s) return 0;
-  return parseFloat(s.replace(/[R$\s]/g,'').replace('.','').replace(',','.')) || 0;
+  // Remove R$, espaços e caracteres inválidos
+  let v = String(s).replace(/[R$\s]/g, '').trim();
+  // Se tem vírgula E ponto: formato brasileiro (1.000,50) → remove ponto, troca vírgula
+  if (v.includes(',') && v.includes('.')) {
+    v = v.replace(/\./g, '').replace(',', '.');
+  } else if (v.includes(',')) {
+    // Só vírgula: pode ser decimal brasileiro (1000,50) ou separador de milhar
+    // Se vírgula está nos últimos 3 chars → decimal
+    const commaPos = v.lastIndexOf(',');
+    if (v.length - commaPos <= 3) {
+      v = v.replace(',', '.');
+    } else {
+      v = v.replace(/,/g, '');
+    }
+  }
+  return parseFloat(v) || 0;
 }
 function fmtVal(n) {
   return 'R$ ' + n.toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
@@ -515,9 +530,13 @@ function calcularTotais() {
     const m = parseVal(inputs[4]?.value);
     const j = parseVal(inputs[5]?.value);
     const c = parseVal(inputs[6]?.value);
-    // Auto-calcula valor atualizado se não preenchido
-    const a = parseVal(inputs[7]?.value) || (o + m + j + c);
-    if (inputs[7] && !inputs[7].value) inputs[7].value = a > 0 ? a.toFixed(2).replace('.',',') : '';
+    const aInput = inputs[7]?.value?.trim();
+    // Usa o valor digitado ou soma os campos
+    const a = aInput ? parseVal(aInput) : (o + m + j + c);
+    // Auto-preenche valor atualizado se vazio
+    if (inputs[7] && !aInput && (o+m+j+c) > 0) {
+      inputs[7].value = (o+m+j+c).toFixed(2).replace('.',',');
+    }
     orig+=o; multa+=m; juros+=j; corr+=c; atual+=a;
   });
   document.getElementById('tot-original').textContent   = fmtVal(orig);

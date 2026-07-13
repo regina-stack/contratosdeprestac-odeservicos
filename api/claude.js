@@ -16,7 +16,7 @@ export default async function handler(req, res) {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, messages })
+        body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 1000, messages })
       });
       if (!response.ok) return res.status(response.status).json({ error: await response.text() });
       return res.status(200).json(await response.json());

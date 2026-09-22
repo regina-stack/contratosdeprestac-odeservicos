@@ -1035,72 +1035,48 @@ async function reenviarContrato(contratoId) {
   const c = todosContratos.find(x => x.id === contratoId);
   if (!c) return;
 
-  if (!confirm(`↺ Reenviar contrato para ${c.nome_cliente}?\n\nIsso irá:\n• Encerrar o contrato expirado\n• Criar novo contrato no painel\n• Reenviar notificação via Clicksign (se disponível)\n\nDeseja continuar?`)) return;
+  if (!confirm(`↺ Reenviar contrato para ${c.nome_cliente}?\n\nIsso irá:\n• Encerrar o contrato antigo (link expirado)\n• Abrir o gerador de contrato com os dados já preenchidos\n• Você revisa e envia — a Clicksign gera um NOVO link válido\n\nDeseja continuar?`)) return;
 
   const btn = document.getElementById('btn-reenviar-' + contratoId);
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Reenviando...'; }
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Encerrando antigo...'; }
 
   try {
-    // 1. Encerra o contrato expirado
+    // 1. Encerra o contrato antigo (o novo será criado quando ela clicar em enviar no gerador)
     await supaFetch(`contratos?id=eq.${contratoId}`, {
       method: 'PATCH',
       body: JSON.stringify({ status: 'encerrado' })
     });
 
-    // 2. Cria novo contrato no Supabase
+    // 2. Registra no histórico do contrato antigo
     const hoje = new Date().toISOString().split('T')[0];
-    const novoResp = await supaFetch('contratos', {
+    await supaFetch('contatos', {
       method: 'POST',
       body: JSON.stringify({
-        nome_cliente:     c.nome_cliente,
-        email_cliente:    c.email_cliente,
-        whatsapp_cliente: c.whatsapp_cliente,
-        razao_social:     c.razao_social,
-        data_envio:       hoje,
-        status:           'pendente',
-        document_key:     c.document_key || null
+        contrato_id: contratoId,
+        data_contato: hoje,
+        resultado: 'sem-resposta',
+        canal: 'Sistema',
+        observacao: 'Contrato encerrado para reenvio. Novo documento será gerado.',
+        feito_por: 'Sistema'
       })
     });
 
-    if (novoResp.ok) {
-      const [novo] = await novoResp.json();
-      if (novo?.id) {
-        await supaFetch('contatos', {
-          method: 'POST',
-          body: JSON.stringify({
-            contrato_id: novo.id,
-            data_contato: hoje,
-            resultado: 'sem-resposta',
-            canal: 'Sistema',
-            observacao: 'Contrato reenviado após expiração.',
-            feito_por: 'Sistema'
-          })
-        });
-      }
+    // 3. Monta URL do gerador com dados pré-preenchidos
+    const params = new URLSearchParams({
+      reenvio: '1',
+      nome:    c.nome_cliente     || '',
+      email:   c.email_cliente    || '',
+      whats:   c.whatsapp_cliente || '',
+      razao:   c.razao_social     || ''
+    });
 
-      // 3. Reenviar notificação via Clicksign se tiver document_key
-      let msgExtra = '';
-      if (c.document_key) {
-        try {
-          const csResp = await fetch('/api/claude', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'clicksign_reenviar', documentKey: c.document_key })
-          });
-          const csData = await csResp.json();
-          msgExtra = csData.success
-            ? '\n✉️ Notificação reenviada via Clicksign!'
-            : '\n⚠️ Novo contrato criado, mas não foi possível reenviar via Clicksign.';
-        } catch(e) {
-          msgExtra = '\n⚠️ Novo contrato criado no painel.';
-        }
-      }
+    if (btn) btn.textContent = '✓ Abrindo gerador...';
 
-      alert(`✅ Contrato reenviado para ${c.nome_cliente}!${msgExtra}`);
-      carregarContratos();
-    }
+    // 4. Redireciona (mesma aba pra ficar mais fluído — a Regina volta com o histórico do navegador)
+    window.location.href = '/index.html?' + params.toString();
+
   } catch(e) {
-    alert('Erro ao reenviar: ' + e.message);
+    alert('Erro ao encerrar contrato antigo: ' + e.message);
     if (btn) { btn.disabled = false; btn.textContent = '↺ Reenviar'; }
   }
 }

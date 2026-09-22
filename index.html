@@ -131,6 +131,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .topbar-link.active{background:rgba(57,231,95,.08);border-color:var(--border2);color:var(--green)}
 .topbar-btn-logout{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:500;color:var(--text2);background:none;border:1px solid var(--border2);cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s}
 .topbar-btn-logout:hover{border-color:#ef4444;color:#ef4444}
+.reenvio-banner{background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(245,158,11,.08));border:1px solid rgba(245,158,11,.4);border-radius:12px;padding:14px 20px;margin:0 auto 20px;max-width:900px;display:flex;align-items:center;gap:12px;font-family:'Inter',sans-serif;color:#fbbf24}
+.reenvio-banner-icon{font-size:24px;flex-shrink:0}
+.reenvio-banner-content{flex:1;font-size:13px;line-height:1.5}
+.reenvio-banner-title{font-weight:700;font-size:14px;margin-bottom:2px;color:#f59e0b}
+.reenvio-banner-close{background:none;border:1px solid rgba(245,158,11,.4);color:#f59e0b;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;font-family:'Exo 2',sans-serif;font-weight:600}
+.reenvio-banner-close:hover{background:rgba(245,158,11,.15)}
 .topbar-usuarios{display:none}
 .app{padding-top:72px}
 
@@ -245,6 +251,14 @@ body.light select option{background:#ffffff;color:var(--text)}
   </div>
 </div>
 <div class="app">
+  <div class="reenvio-banner" id="reenvio-banner" style="display:none">
+    <div class="reenvio-banner-icon">🔄</div>
+    <div class="reenvio-banner-content">
+      <div class="reenvio-banner-title">Reenvio de contrato</div>
+      <div>Dados pré-preenchidos de um envio anterior. Revise, ajuste se necessário e clique em <strong>"Enviar pelo Clicksign"</strong> para gerar um novo link válido.</div>
+    </div>
+    <button class="reenvio-banner-close" onclick="document.getElementById('reenvio-banner').style.display='none'">Fechar</button>
+  </div>
   <div class="header">
     <div class="header-sub">Gerador Automático de Contratos</div>
   </div>
@@ -505,6 +519,40 @@ body.light select option{background:#ffffff;color:var(--text)}
 </div><!-- /app -->
 
 <script>
+
+// ── Pré-preenchimento para reenvio de contrato ────────────────────────────────
+(function preencherDadosReenvio() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('reenvio') !== '1') return;
+
+  const nome  = params.get('nome')  || '';
+  const email = params.get('email') || '';
+  const whats = params.get('whats') || '';
+  const razao = params.get('razao') || '';
+
+  // Espera o DOM carregar antes de preencher
+  window.addEventListener('DOMContentLoaded', () => {
+    // Mostra o banner de reenvio
+    const banner = document.getElementById('reenvio-banner');
+    if (banner) banner.style.display = 'flex';
+
+    // Preenche campos do modal Clicksign (aba de assinatura)
+    const setVal = (id, val) => {
+      const el = document.getElementById(id);
+      if (el && val) el.value = val;
+    };
+    setVal('cs-nome', nome);
+    setVal('cs-email', email);
+    setVal('cs-whats', whats);
+
+    // Preenche campos do formulário principal do contrato
+    setVal('f-socio', nome);
+    setVal('f-razao', razao);
+
+    // Rola até o topo para o usuário ver o banner
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+})();
 
 // ── Sistema de Honorários ─────────────────────────────────────────────────────
 let honMode = 'planos'; // 'planos' ou 'fixo'
